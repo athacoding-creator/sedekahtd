@@ -1,10 +1,11 @@
 import { Layout } from "@/components/Layout";
 import { CampaignCard, Campaign } from "@/components/CampaignCard";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import bannerHero from "@/assets/banner-hero.jpg";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type PublicDonation = {
   id: string;
@@ -51,6 +52,29 @@ const Index = () => {
   const programPilihan = campaigns.slice(0, 3);
   const programLainnya = showAllCampaigns ? campaigns : campaigns.slice(0, 5);
   const visibleDonors = showAllDonors ? donations : donations.slice(0, 5);
+
+  // Hero carousel slides: main banner + top campaign images
+  const heroSlides = [
+    { type: "banner" as const, img: bannerHero, title: "Sedekah Jum'at" },
+    ...campaigns.slice(0, 3).map(c => ({ type: "campaign" as const, img: c.gambar_url ?? bannerHero, title: c.judul, id: c.id })),
+  ];
+  const [heroIdx, setHeroIdx] = useState(0);
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const t = setInterval(() => setHeroIdx(i => (i + 1) % heroSlides.length), 5000);
+    return () => clearInterval(t);
+  }, [heroSlides.length]);
+  const heroPrev = () => setHeroIdx(i => (i - 1 + heroSlides.length) % heroSlides.length);
+  const heroNext = () => setHeroIdx(i => (i + 1) % heroSlides.length);
+
+  // Program Pilihan scroller
+  const pilihanRef = useRef<HTMLDivElement>(null);
+  const scrollPilihan = (dir: "left" | "right") => {
+    const el = pilihanRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.8;
+    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+  };
 
   return (
     <Layout>
