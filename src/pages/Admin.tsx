@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home } from "lucide-react";
-import logoTerasDakwah from "@/public/favicon.png.png";
+import logoTerasDakwah from "@/public/favicon.png";
 
 const Admin = () => {
   const nav = useNavigate();
