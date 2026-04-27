@@ -14,16 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaigns: {
+        Row: {
+          created_at: string
+          deskripsi: string
+          gambar_url: string | null
+          id: string
+          judul: string
+          kategori: string | null
+          target: number
+          terkumpul: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deskripsi: string
+          gambar_url?: string | null
+          id?: string
+          judul: string
+          kategori?: string | null
+          target?: number
+          terkumpul?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deskripsi?: string
+          gambar_url?: string | null
+          id?: string
+          judul?: string
+          kategori?: string | null
+          target?: number
+          terkumpul?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          bukti_transfer: string | null
+          campaign_id: string | null
+          created_at: string
+          id: string
+          metode_pembayaran: string
+          nama: string
+          nominal: number
+          status: string
+          verified_at: string | null
+        }
+        Insert: {
+          bukti_transfer?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          metode_pembayaran: string
+          nama: string
+          nominal: number
+          status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          bukti_transfer?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          metode_pembayaran?: string
+          nama?: string
+          nominal?: number
+          status?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +256,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

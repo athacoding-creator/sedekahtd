@@ -1,0 +1,90 @@
+import { Layout } from "@/components/Layout";
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Campaign } from "@/components/CampaignCard";
+import { formatRupiah } from "@/lib/format";
+import { ArrowLeft, Calendar, Heart, Share2, Target } from "lucide-react";
+
+const CampaignDetail = () => {
+  const { id } = useParams();
+  const [c, setC] = useState<Campaign | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("campaigns").select("*").eq("id", id).maybeSingle()
+      .then(({ data }) => setC(data as Campaign));
+  }, [id]);
+
+  if (!c) return <Layout><div className="container py-20 text-center text-muted-foreground">Memuat...</div></Layout>;
+
+  const pct = Math.min(100, Math.round((c.terkumpul / Math.max(1, c.target)) * 100));
+
+  return (
+    <Layout>
+      <div className="container py-6">
+        <Link to="/campaign" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-smooth">
+          <ArrowLeft className="h-4 w-4" /> Kembali ke campaign
+        </Link>
+      </div>
+      <div className="container pb-16 grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 animate-fade-in-up">
+          <div className="rounded-3xl overflow-hidden shadow-card aspect-[16/10] bg-muted">
+            <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} className="h-full w-full object-cover" />
+          </div>
+          {c.kategori && (
+            <span className="inline-block mt-5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              {c.kategori}
+            </span>
+          )}
+          <h1 className="font-display text-3xl md:text-4xl font-extrabold mt-3 mb-4">{c.judul}</h1>
+          <div className="prose prose-sm max-w-none">
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{c.deskripsi}</p>
+          </div>
+        </div>
+
+        <aside className="lg:sticky lg:top-24 h-fit space-y-4 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
+          <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6">
+            <div className="mb-5">
+              <div className="flex justify-between items-end mb-2">
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Terkumpul</div>
+                  <div className="font-display font-extrabold text-2xl text-primary">{formatRupiah(c.terkumpul)}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-primary">{pct}%</div>
+                </div>
+              </div>
+              <div className="h-3 rounded-full bg-secondary overflow-hidden">
+                <div className="h-full gradient-hero rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+              </div>
+              <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Target className="h-3 w-3" /> Target: {formatRupiah(c.target)}
+              </div>
+            </div>
+
+            <Link to={`/donasi/${c.id}`} className="block w-full text-center px-6 py-4 rounded-2xl gradient-hero text-primary-foreground font-bold shadow-button hover:shadow-glow transition-smooth flex items-center justify-center gap-2">
+              <Heart className="h-4 w-4 fill-current" /> Donasi Sekarang
+            </Link>
+
+            <button className="mt-3 w-full px-6 py-3 rounded-2xl bg-secondary text-foreground font-semibold hover:bg-secondary/80 transition-smooth flex items-center justify-center gap-2">
+              <Share2 className="h-4 w-4" /> Bagikan
+            </button>
+          </div>
+
+          <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 text-sm space-y-3">
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span>Penggalangan aktif</span>
+            </div>
+            <p className="text-xs text-muted-foreground border-t border-border/60 pt-3">
+              Donasi Anda 100% disalurkan ke penerima manfaat. Laporan pertanggungjawaban tersedia untuk donatur.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </Layout>
+  );
+};
+
+export default CampaignDetail;
