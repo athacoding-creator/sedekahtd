@@ -82,7 +82,14 @@ const Index = () => {
       <section className="bg-secondary/40 pt-6 pb-4">
         <div className="container max-w-4xl">
           <div className="relative rounded-3xl overflow-hidden shadow-card aspect-[16/9] sm:aspect-[21/9] animate-fade-in">
-            <img src={bannerHero} alt="Sedekah Jum'at - Pahala Berlipat" className="absolute inset-0 h-full w-full object-cover" />
+            {heroSlides.map((slide, i) => (
+              <img
+                key={i}
+                src={slide.img}
+                alt={slide.title}
+                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === heroIdx ? "opacity-100" : "opacity-0"}`}
+              />
+            ))}
             {/* Logo overlays */}
             <div className="absolute top-4 left-4 flex gap-2">
               <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-[10px] font-bold text-primary-dark shadow-soft">
@@ -93,24 +100,51 @@ const Index = () => {
               </div>
             </div>
             {/* CTA tombol kuning */}
-            <button className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide">
-              Sedekah Sekarang
+            {heroSlides[heroIdx]?.type === "campaign" ? (
+              <Link
+                to={`/campaign/${(heroSlides[heroIdx] as any).id}`}
+                className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide"
+              >
+                Sedekah Sekarang
+              </Link>
+            ) : (
+              <Link
+                to="/campaign"
+                className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide"
+              >
+                Sedekah Sekarang
+              </Link>
+            )}
+            {/* Carousel arrows */}
+            <button onClick={heroPrev} aria-label="Sebelumnya" className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            {/* Carousel arrows (decorative) */}
-            <button className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">‹</button>
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">›</button>
+            <button onClick={heroNext} aria-label="Berikutnya" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            {/* Dots */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {heroSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setHeroIdx(i)}
+                  aria-label={`Slide ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${i === heroIdx ? "w-6 bg-white" : "w-1.5 bg-white/60"}`}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Stats bar */}
-          <div className="bg-card rounded-2xl shadow-card border border-border/60 mt-5 grid grid-cols-3 divide-x divide-border overflow-hidden animate-fade-in-up">
+          {/* Stats bar — vertical stacked, divider rows */}
+          <div className="bg-card rounded-2xl shadow-card border border-border/60 mt-5 divide-y divide-border overflow-hidden animate-fade-in-up">
             {[
               { l: "Total Donasi", v: formatRupiah(stats.total) },
               { l: "Jumlah Donasi", v: stats.jumlah.toLocaleString("id-ID") },
-              { l: "Aktif Program", v: stats.aktif },
+              { l: "Aktif Program", v: String(stats.aktif) },
             ].map(s => (
-              <div key={s.l} className="py-4 px-2 text-center">
-                <div className="text-[11px] text-muted-foreground mb-1">{s.l}</div>
-                <div className="font-display font-extrabold text-sm sm:text-base text-foreground">{s.v}</div>
+              <div key={s.l} className="py-4 px-4 text-center">
+                <div className="text-sm text-muted-foreground mb-1">{s.l}</div>
+                <div className="font-display font-extrabold text-base sm:text-lg text-foreground">{s.v}</div>
               </div>
             ))}
           </div>
