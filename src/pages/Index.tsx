@@ -49,7 +49,7 @@ const Index = () => {
       });
   }, []);
 
-  const programPilihan = campaigns.slice(0, 3);
+  const programPilihan = campaigns;
   const programLainnya = showAllCampaigns ? campaigns : campaigns.slice(0, 5);
   const visibleDonors = showAllDonors ? donations : donations.slice(0, 5);
 
