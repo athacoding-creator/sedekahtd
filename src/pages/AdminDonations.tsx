@@ -38,7 +38,16 @@ const AdminDonations = () => {
     if (cRes.data) setCampaigns(cRes.data as Campaign[]);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Realtime: refetch saat ada perubahan donations / campaigns
+    const ch = supabase
+      .channel("admin-donations-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "donations" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "campaigns" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
 
   const verify = async (id: string) => {
     const { error } = await supabase.from("donations").update({ status: "verified" }).eq("id", id);
