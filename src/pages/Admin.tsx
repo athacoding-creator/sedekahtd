@@ -168,7 +168,7 @@ const Admin = () => {
         {/* Hero greeting */}
         <div className="rounded-2xl bg-gradient-to-r from-primary to-primary-dark text-primary-foreground p-6 md:p-8 mb-8 shadow-blue">
           <h1 className="font-display text-2xl md:text-3xl font-extrabold mb-2">Selamat Datang, Admin! 👋</h1>
-          <p className="text-primary-foreground/90 text-sm">Kelola konten website Yayasan Teras Dakwah Indonesia dari sini</p>
+          <p className="text-primary-foreground/90 text-sm">Kelola konten Campaign Yayasan Teras Dakwah Indonesia dari sini</p>
         </div>
 
         {/* Stats */}
