@@ -59,6 +59,7 @@ export type Database = {
           metode_pembayaran: string
           nama: string
           nominal: number
+          pesan: string | null
           status: string
           verified_at: string | null
         }
@@ -70,6 +71,7 @@ export type Database = {
           metode_pembayaran: string
           nama: string
           nominal: number
+          pesan?: string | null
           status?: string
           verified_at?: string | null
         }
@@ -81,6 +83,7 @@ export type Database = {
           metode_pembayaran?: string
           nama?: string
           nominal?: number
+          pesan?: string | null
           status?: string
           verified_at?: string | null
         }
@@ -117,7 +120,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_donations: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          id: string | null
+          nama: string | null
+          nominal: number | null
+          pesan: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          nama?: string | null
+          nominal?: number | null
+          pesan?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          nama?: string | null
+          nominal?: number | null
+          pesan?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
