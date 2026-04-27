@@ -158,36 +158,52 @@ const Index = () => {
             <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program Pilihan</h2>
             <p className="text-sm text-muted-foreground">Program prioritas yang membutuhkan</p>
           </div>
-          {/* Carousel of small cards */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 -mx-4 px-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible">
-            {programPilihan.map((c, i) => (
-              <Link
-                key={c.id}
-                to={`/campaign/${c.id}`}
-                className="group flex-shrink-0 w-[80%] sm:w-auto snap-center bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
-                style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
-              >
-                <div className="aspect-[4/3] overflow-hidden bg-muted">
-                  <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500" />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
-                    YAYASAN TERAS DAKWAH <span className="text-primary">✓</span>
+          <div className="relative">
+            {/* Arrow buttons */}
+            <button
+              onClick={() => scrollPilihan("left")}
+              aria-label="Geser kiri"
+              className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-border"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => scrollPilihan("right")}
+              aria-label="Geser kanan"
+              className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-border"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            {/* Scroller */}
+            <div
+              ref={pilihanRef}
+              className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 -mx-4 px-4 scroll-smooth"
+            >
+              {programPilihan.map((c, i) => (
+                <Link
+                  key={c.id}
+                  to={`/campaign/${c.id}`}
+                  className="group flex-shrink-0 w-[80%] sm:w-[calc(33.333%-0.667rem)] snap-center bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-muted">
+                    <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500" />
                   </div>
-                  <div className="text-sm font-bold text-primary mb-2">
-                    {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+                  <div className="p-4">
+                    <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
+                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
+                      YAYASAN TERAS DAKWAH <span className="text-primary">✓</span>
+                    </div>
+                    <div className="text-sm font-bold text-primary mb-2">
+                      {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full bg-progress rounded-full" style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }} />
+                    </div>
                   </div>
-                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full bg-progress rounded-full" style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }} />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="flex justify-center gap-1.5 mt-2">
-            <span className="h-1.5 w-6 rounded-full bg-primary"></span>
-            <span className="h-1.5 w-1.5 rounded-full bg-border"></span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
