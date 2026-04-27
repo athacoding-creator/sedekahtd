@@ -1,4 +1,10 @@
-import { Instagram, Facebook, Youtube, Twitter, Mail, MapPin } from "lucide-react";
+import { Instagram, Facebook, Youtube, Mail, MapPin } from "lucide-react";
+
+const socials = [
+  { Icon: Facebook, href: "https://www.facebook.com/TerasDakwah" },
+  { Icon: Instagram, href: "https://www.instagram.com/terasdakwah/" },
+  { Icon: Youtube, href: "https://www.youtube.com/@terasdakwah" },
+];
 import logoTerasDakwah from "@/assets/logo-teras-dakwah.png";
 
 export const Footer = () => (
@@ -10,8 +16,8 @@ export const Footer = () => (
           Social Media <span className="text-primary border-b-2 border-primary pb-1">Teras Dakwah</span>
         </h3>
         <div className="flex justify-center gap-3 mb-10">
-          {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-            <a key={i} href="#" className="h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-smooth">
+          {socials.map(({ Icon, href }, i) => (
+            <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-smooth">
               <Icon className="h-4 w-4" />
             </a>
           ))}
@@ -21,7 +27,7 @@ export const Footer = () => (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4" /> info@terasdakwah.com
           </div>
-          <div className="flex items-start justify-center gap-2 text-sm text-muted-foreground max-w-md mx-auto">
+          <div className="inline-flex items-start gap-2 text-sm text-muted-foreground mx-auto text-left">
             <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <span>Jalan Nitikan UH VI / 413 RT 41 RW 11<br />
                 Kel. Sorosutan Kec. Umbulharjo, Yogyakarta</span>
