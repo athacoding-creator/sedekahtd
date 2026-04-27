@@ -27,10 +27,9 @@ export const Footer = () => (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4" /> info@terasdakwah.com
           </div>
-          <div className="inline-flex items-start gap-2 text-sm text-muted-foreground mx-auto text-left">
-            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>Jalan Nitikan UH VI / 413 RT 41 RW 11<br />
-                Kel. Sorosutan Kec. Umbulharjo, Yogyakarta</span>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 flex-shrink-0" />
+            <span>Jalan Nitikan UH VI / 413 RT 41 RW 11, Kel. Sorosutan Kec. Umbulharjo, Yogyakarta</span>
           </div>
         </div>
       </div>
