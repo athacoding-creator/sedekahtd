@@ -115,7 +115,7 @@ const Index = () => {
                 <div className="p-4">
                   <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
-                    YAYASAN BERKAHKITA <span className="text-primary">✓</span>
+                    YAYASAN TERAS DAKWAH <span className="text-primary">✓</span>
                   </div>
                   <div className="text-sm font-bold text-primary mb-2">
                     {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
@@ -134,12 +134,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* PROGRAM BERKAHKITA */}
+      {/* PROGRAM TERAS DAKWAH */}
       <section className="py-12 bg-secondary/40 border-y border-border/60">
         <div className="container max-w-3xl">
           <div className="text-center mb-8 animate-fade-in-up">
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program BerkahKita</h2>
-            <p className="text-sm text-muted-foreground">Recharge iman dengan program-program BerkahKita</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program Teras Dakwah</h2>
+            <p className="text-sm text-muted-foreground">Recharge iman dengan program-program Teras Dakwah</p>
           </div>
           <div className="space-y-4">
             {programLainnya.map((c, i) => <CampaignCard key={c.id} c={c} index={i} />)}
@@ -198,12 +198,12 @@ const Index = () => {
       {/* TENTANG */}
       <section className="py-12">
         <div className="container max-w-2xl text-center">
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2 animate-fade-in-up">Tentang BerkahKita</h2>
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2 animate-fade-in-up">Tentang Teras Dakwah</h2>
           <p className="text-sm text-muted-foreground mb-6">Tempat sedekah amanah dan transparan untuk umat</p>
           <div className="space-y-4 text-sm text-muted-foreground leading-relaxed text-left">
-            <p>Yayasan BerkahKita Indonesia, sebagai salah satu penggerak kebaikan sejak tahun 2011.</p>
+            <p>Yayasan Teras Dakwah, sebagai salah satu penggerak kebaikan sejak tahun 2011.</p>
             <p>Manfaat untuk umat dan masyarakat menjadi salah satu tagline kami dalam bergerak, dan kami pun memiliki prinsip bahwa semakin banyak penerima manfaat, semakin banyak pula saksi kita di hari akhirat. Berarti harus selalu bergerak dan bermanfaat bagi manusia sekitarnya.</p>
-            <p>Apalagi sebaik-baiknya manusia adalah yang bermanfaat bagi sesama, maka BerkahKita berkomitmen memberikan pelayanan terbaik dalam hal Dakwah, sosial kemanusiaan dan juga perekonomian umat.</p>
+            <p>Apalagi sebaik-baiknya manusia adalah yang bermanfaat bagi sesama, maka Teras Dakwah berkomitmen memberikan pelayanan terbaik dalam hal Dakwah, sosial kemanusiaan dan juga perekonomian umat.</p>
           </div>
         </div>
       </section>
