@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import bannerHero from "@/assets/banner-hero.jpg";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingUp, Users, Layers } from "lucide-react";
 
 type PublicDonation = {
   id: string;
@@ -76,12 +76,19 @@ const Index = () => {
     el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   };
 
+  const statsData = [
+    { label: "Total Donasi", value: formatRupiah(stats.total), icon: TrendingUp, color: "text-primary" },
+    { label: "Jumlah Donasi", value: stats.jumlah.toLocaleString("id-ID"), icon: Users, color: "text-emerald-500" },
+    { label: "Aktif Program", value: String(stats.aktif), icon: Layers, color: "text-amber-500" },
+  ];
+
   return (
     <Layout>
       {/* HERO BANNER */}
-      <section className="bg-secondary/40 pt-6 pb-4">
-        <div className="container max-w-4xl">
-          <div className="relative rounded-3xl overflow-hidden shadow-card aspect-[16/9] sm:aspect-[21/9] animate-fade-in">
+      <section className="bg-gradient-to-b from-sky-50 to-slate-50 pt-5 pb-5">
+        <div className="container max-w-4xl px-4">
+          {/* Hero Carousel */}
+          <div className="relative rounded-2xl overflow-hidden shadow-card animate-fade-in" style={{ aspectRatio: "16/9" }}>
             {heroSlides.map((slide, i) => (
               <img
                 key={i}
@@ -90,38 +97,55 @@ const Index = () => {
                 className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === heroIdx ? "opacity-100" : "opacity-0"}`}
               />
             ))}
-            {/* Logo overlays */}
-            <div className="absolute top-4 left-4 flex gap-2">
-              <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-[10px] font-bold text-primary-dark shadow-soft">
+
+            {/* Gradient overlay bottom */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+            {/* Gradient overlay top-left for badges */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-transparent pointer-events-none" />
+
+            {/* Category badges */}
+            <div className="absolute top-3 left-3 flex gap-1.5">
+              <div className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-semibold text-slate-700 shadow-soft">
                 ⌂ Baitulmaal
               </div>
-              <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-[10px] font-bold text-primary-dark shadow-soft">
+              <div className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-semibold text-slate-700 shadow-soft">
                 🕌 Masjid
               </div>
             </div>
-            {/* CTA tombol kuning */}
+
+            {/* CTA button */}
             {heroSlides[heroIdx]?.type === "campaign" ? (
               <Link
                 to={`/campaign/${(heroSlides[heroIdx] as any).id}`}
-                className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide"
+                className="absolute bottom-4 right-4 px-5 py-2.5 rounded-full bg-accent text-accent-foreground font-bold text-[11px] shadow-button hover:scale-105 transition-smooth uppercase tracking-widest"
               >
                 Sedekah Sekarang
               </Link>
             ) : (
               <Link
                 to="/campaign"
-                className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide"
+                className="absolute bottom-4 right-4 px-5 py-2.5 rounded-full bg-accent text-accent-foreground font-bold text-[11px] shadow-button hover:scale-105 transition-smooth uppercase tracking-widest"
               >
                 Sedekah Sekarang
               </Link>
             )}
+
             {/* Carousel arrows */}
-            <button onClick={heroPrev} aria-label="Sebelumnya" className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">
+            <button
+              onClick={heroPrev}
+              aria-label="Sebelumnya"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/85 backdrop-blur-sm text-slate-700 flex items-center justify-center shadow-card hover:bg-white hover:scale-110 transition-smooth"
+            >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button onClick={heroNext} aria-label="Berikutnya" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">
+            <button
+              onClick={heroNext}
+              aria-label="Berikutnya"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/85 backdrop-blur-sm text-slate-700 flex items-center justify-center shadow-card hover:bg-white hover:scale-110 transition-smooth"
+            >
               <ChevronRight className="h-4 w-4" />
             </button>
+
             {/* Dots */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {heroSlides.map((_, i) => (
@@ -129,22 +153,26 @@ const Index = () => {
                   key={i}
                   onClick={() => setHeroIdx(i)}
                   aria-label={`Slide ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${i === heroIdx ? "w-6 bg-white" : "w-1.5 bg-white/60"}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === heroIdx ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
                 />
               ))}
             </div>
           </div>
 
-          {/* Stats bar — vertical stacked, divider rows */}
-          <div className="bg-card rounded-2xl shadow-card border border-border/60 mt-5 divide-y divide-border overflow-hidden animate-fade-in-up">
-            {[
-              { l: "Total Donasi", v: formatRupiah(stats.total) },
-              { l: "Jumlah Donasi", v: stats.jumlah.toLocaleString("id-ID") },
-              { l: "Aktif Program", v: String(stats.aktif) },
-            ].map(s => (
-              <div key={s.l} className="py-4 px-4 text-center">
-                <div className="text-sm text-muted-foreground mb-1">{s.l}</div>
-                <div className="font-display font-extrabold text-base sm:text-lg text-foreground">{s.v}</div>
+          {/* Stats Cards */}
+          <div className="mt-4 bg-white rounded-2xl shadow-card border border-slate-100 overflow-hidden animate-fade-in-up">
+            {statsData.map((s, idx) => (
+              <div
+                key={s.label}
+                className={`flex items-center justify-between px-5 py-4 ${idx < statsData.length - 1 ? "border-b border-slate-100" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center ${s.color}`}>
+                    <s.icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm text-slate-500 font-medium">{s.label}</span>
+                </div>
+                <span className="font-display font-bold text-base text-slate-800 tracking-tight">{s.value}</span>
               </div>
             ))}
           </div>
@@ -152,53 +180,62 @@ const Index = () => {
       </section>
 
       {/* PROGRAM PILIHAN */}
-      <section className="py-12">
-        <div className="container max-w-4xl">
-          <div className="text-center mb-8 animate-fade-in-up">
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program Pilihan</h2>
-            <p className="text-sm text-muted-foreground">Program prioritas yang membutuhkan</p>
+      <section className="py-10">
+        <div className="container max-w-4xl px-4">
+          <div className="text-center mb-6 animate-fade-in-up">
+            <h2 className="font-display text-2xl font-bold mb-1.5 text-slate-800">Program Pilihan</h2>
+            <p className="text-sm text-slate-500">Program prioritas yang membutuhkan</p>
           </div>
           <div className="relative">
             {/* Arrow buttons */}
             <button
               onClick={() => scrollPilihan("left")}
               aria-label="Geser kiri"
-              className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-border"
+              className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 h-9 w-9 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-slate-100"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => scrollPilihan("right")}
               aria-label="Geser kanan"
-              className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-border"
+              className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 h-9 w-9 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-slate-100"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
+
             {/* Scroller */}
             <div
               ref={pilihanRef}
-              className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 -mx-4 px-4 scroll-smooth"
+              className="flex gap-3.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-3 -mx-4 px-4 scroll-smooth"
             >
               {programPilihan.map((c, i) => (
                 <Link
                   key={c.id}
                   to={`/campaign/${c.id}`}
-                  className="group flex-shrink-0 w-[80%] sm:w-[calc(33.333%-0.667rem)] snap-center bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
+                  className="group flex-shrink-0 w-[78%] sm:w-[calc(33.333%-0.667rem)] snap-center bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-slate-100/80 transition-smooth hover:-translate-y-1 animate-fade-in-up"
                   style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
                 >
-                  <div className="aspect-[4/3] overflow-hidden bg-muted">
-                    <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500" />
+                  <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                    <img
+                      src={c.gambar_url ?? "/placeholder.svg"}
+                      alt={c.judul}
+                      loading="lazy"
+                      className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500"
+                    />
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
+                  <div className="p-3.5">
+                    <h3 className="font-display font-bold text-[13px] leading-snug mb-1.5 line-clamp-2 text-slate-800 group-hover:text-primary transition-smooth">{c.judul}</h3>
+                    <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-2">
                       YAYASAN TERAS DAKWAH <span className="text-primary">✓</span>
                     </div>
                     <div className="text-sm font-bold text-primary mb-2">
-                      {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+                      {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-slate-400">terkumpul</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                      <div className="h-full bg-progress rounded-full" style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }} />
+                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700"
+                        style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }}
+                      />
                     </div>
                   </div>
                 </Link>
@@ -209,25 +246,31 @@ const Index = () => {
       </section>
 
       {/* PROGRAM TERAS DAKWAH */}
-      <section className="py-12 bg-secondary/40 border-y border-border/60">
-        <div className="container max-w-3xl">
-          <div className="text-center mb-8 animate-fade-in-up">
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program Teras Dakwah</h2>
-            <p className="text-sm text-muted-foreground">Recharge iman dengan program-program Teras Dakwah</p>
+      <section className="py-10 bg-gradient-to-b from-slate-50 to-sky-50/60 border-y border-slate-100">
+        <div className="container max-w-3xl px-4">
+          <div className="text-center mb-6 animate-fade-in-up">
+            <h2 className="font-display text-2xl font-bold mb-1.5 text-slate-800">Program Teras Dakwah</h2>
+            <p className="text-sm text-slate-500">Recharge iman dengan program-program Teras Dakwah</p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {programLainnya.map((c, i) => <CampaignCard key={c.id} c={c} index={i} />)}
           </div>
           {!showAllCampaigns && campaigns.length > 5 && (
             <div className="text-center mt-8">
-              <button onClick={() => setShowAllCampaigns(true)} className="px-8 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-primary-foreground transition-smooth">
+              <button
+                onClick={() => setShowAllCampaigns(true)}
+                className="px-8 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-smooth"
+              >
                 Load more
               </button>
             </div>
           )}
           {showAllCampaigns && (
             <div className="text-center mt-8">
-              <Link to="/campaign" className="px-8 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-primary-foreground transition-smooth">
+              <Link
+                to="/campaign"
+                className="px-8 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-smooth"
+              >
                 Lihat semua campaign
               </Link>
             </div>
@@ -236,31 +279,40 @@ const Index = () => {
       </section>
 
       {/* ORANG-ORANG BAIK */}
-      <section className="py-12">
-        <div className="container max-w-3xl">
-          <div className="text-center mb-8 animate-fade-in-up">
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">#orang-orang baik</h2>
-            <p className="text-sm text-muted-foreground">Berkumpul memberikan bantuan terbaik</p>
+      <section className="py-10">
+        <div className="container max-w-3xl px-4">
+          <div className="text-center mb-6 animate-fade-in-up">
+            <h2 className="font-display text-2xl font-bold mb-1.5 text-slate-800">#orang-orang baik</h2>
+            <p className="text-sm text-slate-500">Berkumpul memberikan bantuan terbaik</p>
           </div>
-          <div className="bg-secondary/40 rounded-3xl p-4 sm:p-6 space-y-3">
-            {visibleDonors.length === 0 && (
-              <div className="text-center py-12 text-sm text-muted-foreground">Belum ada donatur. Jadilah yang pertama!</div>
+          <div className="space-y-3">
+            {donations.length === 0 && (
+              <div className="text-center py-12 text-sm text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+                Belum ada donatur. Jadilah yang pertama!
+              </div>
             )}
             {visibleDonors.map((d, i) => (
-              <div key={d.id} className="bg-card rounded-2xl p-4 shadow-soft border border-border/60 animate-fade-in-up" style={{ animationDelay: `${i * 50}ms`, animationFillMode: "backwards" }}>
+              <div
+                key={d.id}
+                className="bg-white rounded-2xl p-4 shadow-soft border border-slate-100 animate-fade-in-up hover:shadow-card transition-smooth"
+                style={{ animationDelay: `${i * 50}ms`, animationFillMode: "backwards" }}
+              >
                 <div className="flex items-start justify-between gap-3 mb-1">
-                  <div className="font-display font-bold text-sm">{d.nama}</div>
-                  <div className="text-[11px] text-muted-foreground whitespace-nowrap">{timeAgo(d.created_at)}</div>
+                  <div className="font-display font-bold text-sm text-slate-800">{d.nama}</div>
+                  <div className="text-[11px] text-slate-400 whitespace-nowrap">{timeAgo(d.created_at)}</div>
                 </div>
-                <div className="text-sm text-muted-foreground mb-1">
+                <div className="text-sm text-slate-500 mb-1">
                   Donasi <span className="font-bold text-primary">{formatRupiah(d.nominal)}</span>
                 </div>
-                {d.pesan && <div className="text-xs text-muted-foreground italic">"{d.pesan}"</div>}
+                {d.pesan && <div className="text-xs text-slate-400 italic mt-1">"{d.pesan}"</div>}
               </div>
             ))}
             {donations.length > 5 && !showAllDonors && (
               <div className="text-center pt-4">
-                <button onClick={() => setShowAllDonors(true)} className="px-8 py-2.5 rounded-full bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-smooth">
+                <button
+                  onClick={() => setShowAllDonors(true)}
+                  className="px-8 py-2.5 rounded-full bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-smooth shadow-soft"
+                >
                   Loadmore
                 </button>
               </div>
@@ -270,11 +322,11 @@ const Index = () => {
       </section>
 
       {/* TENTANG */}
-      <section className="py-12">
-        <div className="container max-w-2xl text-center">
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2 animate-fade-in-up">Tentang Teras Dakwah</h2>
-          <p className="text-sm text-muted-foreground mb-6">Tempat sedekah amanah dan transparan untuk umat</p>
-          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed text-left">
+      <section className="py-10 bg-gradient-to-b from-sky-50/60 to-slate-50">
+        <div className="container max-w-2xl px-4 text-center">
+          <h2 className="font-display text-2xl font-bold mb-1.5 text-slate-800 animate-fade-in-up">Tentang Teras Dakwah</h2>
+          <p className="text-sm text-slate-500 mb-6">Tempat sedekah amanah dan transparan untuk umat</p>
+          <div className="space-y-4 text-sm text-slate-500 leading-relaxed text-left bg-white rounded-2xl p-6 shadow-soft border border-slate-100">
             <p>Yayasan Teras Dakwah, sebagai salah satu penggerak kebaikan sejak tahun 2011.</p>
             <p>Manfaat untuk umat dan masyarakat menjadi salah satu tagline kami dalam bergerak, dan kami pun memiliki prinsip bahwa semakin banyak penerima manfaat, semakin banyak pula saksi kita di hari akhirat. Berarti harus selalu bergerak dan bermanfaat bagi manusia sekitarnya.</p>
             <p>Apalagi sebaik-baiknya manusia adalah yang bermanfaat bagi sesama, maka Teras Dakwah berkomitmen memberikan pelayanan terbaik dalam hal Dakwah, sosial kemanusiaan dan juga perekonomian umat.</p>

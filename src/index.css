@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Fredoka:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Josefin+Sans:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,32 +6,32 @@
 
 @layer base {
   :root {
-    --background: 200 60% 97%;
-    --foreground: 215 35% 15%;
+    --background: 210 40% 98%;
+    --foreground: 215 35% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 35% 15%;
+    --card-foreground: 215 35% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 35% 15%;
+    --popover-foreground: 215 35% 12%;
 
     /* Biru cerah ala Teras Dakwah */
-    --primary: 201 96% 48%;
+    --primary: 201 96% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 211 90% 35%;
+    --primary-dark: 211 90% 30%;
 
-    --secondary: 200 60% 95%;
+    --secondary: 210 40% 96%;
     --secondary-foreground: 215 35% 18%;
 
-    --muted: 200 30% 95%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 210 30% 94%;
+    --muted-foreground: 215 18% 48%;
 
     /* Kuning accent untuk tombol "SEDEKAH SEKARANG" */
-    --accent: 48 100% 55%;
-    --accent-foreground: 215 50% 15%;
+    --accent: 48 100% 52%;
+    --accent-foreground: 215 50% 12%;
 
     /* Hijau untuk progress bar */
-    --progress: 88 70% 50%;
+    --progress: 142 65% 42%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -39,19 +39,22 @@
     --success: 142 70% 40%;
     --warning: 38 92% 50%;
 
-    --border: 200 25% 90%;
-    --input: 200 25% 92%;
-    --ring: 201 96% 48%;
+    --border: 210 28% 88%;
+    --input: 210 28% 92%;
+    --ring: 201 96% 42%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    --gradient-banner: linear-gradient(135deg, hsl(201 96% 48%), hsl(195 95% 55%));
-    --gradient-soft: linear-gradient(180deg, hsl(200 60% 97%), hsl(200 60% 95%));
+    --gradient-banner: linear-gradient(135deg, hsl(201 96% 42%), hsl(195 95% 52%));
+    --gradient-soft: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 95%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
 
-    --shadow-soft: 0 2px 12px -3px hsl(201 50% 30% / 0.08);
-    --shadow-card: 0 6px 24px -8px hsl(201 50% 30% / 0.15);
-    --shadow-button: 0 4px 14px -4px hsl(48 100% 50% / 0.5);
-    --shadow-blue: 0 4px 16px -4px hsl(201 96% 48% / 0.4);
+    --shadow-soft: 0 2px 16px -4px hsl(201 60% 25% / 0.10), 0 1px 4px -1px hsl(201 60% 25% / 0.06);
+    --shadow-card: 0 8px 32px -8px hsl(201 60% 25% / 0.18), 0 2px 8px -2px hsl(201 60% 25% / 0.08);
+    --shadow-card-hover: 0 16px 48px -12px hsl(201 60% 25% / 0.24), 0 4px 12px -4px hsl(201 60% 25% / 0.12);
+    --shadow-button: 0 4px 18px -4px hsl(48 100% 50% / 0.55);
+    --shadow-blue: 0 4px 20px -4px hsl(201 96% 42% / 0.45);
+    --shadow-header: 0 2px 20px -4px hsl(201 60% 25% / 0.12);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -90,25 +93,31 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
   }
   h1, h2, h3, h4, h5 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Josefin Sans', system-ui, sans-serif;
     @apply font-bold tracking-tight;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
   .gradient-banner { background: var(--gradient-banner); }
   .gradient-soft { background: var(--gradient-soft); }
+  .gradient-card { background: var(--gradient-card); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-card-hover { box-shadow: var(--shadow-card-hover); }
   .shadow-button { box-shadow: var(--shadow-button); }
   .shadow-blue { box-shadow: var(--shadow-blue); }
+  .shadow-header { box-shadow: var(--shadow-header); }
   .transition-smooth { transition: var(--transition-smooth); }
-  .font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  .font-fredoka { font-family: 'Fredoka', system-ui, sans-serif; }
+  .font-display { font-family: 'Josefin Sans', system-ui, sans-serif; }
+  .font-body { font-family: 'Inter', system-ui, sans-serif; }
   .text-progress { color: hsl(var(--progress)); }
   .bg-progress { background-color: hsl(var(--progress)); }
   .text-primary-dark { color: hsl(var(--primary-dark)); }
@@ -117,4 +126,10 @@
   /* hide scrollbar */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Gradient fade edges for horizontal scroll */
+  .fade-edges {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  }
 }
