@@ -1,10 +1,11 @@
 import { Layout } from "@/components/Layout";
 import { CampaignCard, Campaign } from "@/components/CampaignCard";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import bannerHero from "@/assets/banner-hero.jpg";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type PublicDonation = {
   id: string;
@@ -48,9 +49,32 @@ const Index = () => {
       });
   }, []);
 
-  const programPilihan = campaigns.slice(0, 3);
+  const programPilihan = campaigns;
   const programLainnya = showAllCampaigns ? campaigns : campaigns.slice(0, 5);
   const visibleDonors = showAllDonors ? donations : donations.slice(0, 5);
+
+  // Hero carousel slides: main banner + top campaign images
+  const heroSlides = [
+    { type: "banner" as const, img: bannerHero, title: "Sedekah Jum'at" },
+    ...campaigns.slice(0, 3).map(c => ({ type: "campaign" as const, img: c.gambar_url ?? bannerHero, title: c.judul, id: c.id })),
+  ];
+  const [heroIdx, setHeroIdx] = useState(0);
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const t = setInterval(() => setHeroIdx(i => (i + 1) % heroSlides.length), 5000);
+    return () => clearInterval(t);
+  }, [heroSlides.length]);
+  const heroPrev = () => setHeroIdx(i => (i - 1 + heroSlides.length) % heroSlides.length);
+  const heroNext = () => setHeroIdx(i => (i + 1) % heroSlides.length);
+
+  // Program Pilihan scroller
+  const pilihanRef = useRef<HTMLDivElement>(null);
+  const scrollPilihan = (dir: "left" | "right") => {
+    const el = pilihanRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.8;
+    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+  };
 
   return (
     <Layout>
@@ -58,7 +82,14 @@ const Index = () => {
       <section className="bg-secondary/40 pt-6 pb-4">
         <div className="container max-w-4xl">
           <div className="relative rounded-3xl overflow-hidden shadow-card aspect-[16/9] sm:aspect-[21/9] animate-fade-in">
-            <img src={bannerHero} alt="Sedekah Jum'at - Pahala Berlipat" className="absolute inset-0 h-full w-full object-cover" />
+            {heroSlides.map((slide, i) => (
+              <img
+                key={i}
+                src={slide.img}
+                alt={slide.title}
+                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === heroIdx ? "opacity-100" : "opacity-0"}`}
+              />
+            ))}
             {/* Logo overlays */}
             <div className="absolute top-4 left-4 flex gap-2">
               <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-[10px] font-bold text-primary-dark shadow-soft">
@@ -69,24 +100,51 @@ const Index = () => {
               </div>
             </div>
             {/* CTA tombol kuning */}
-            <button className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide">
-              Sedekah Sekarang
+            {heroSlides[heroIdx]?.type === "campaign" ? (
+              <Link
+                to={`/campaign/${(heroSlides[heroIdx] as any).id}`}
+                className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide"
+              >
+                Sedekah Sekarang
+              </Link>
+            ) : (
+              <Link
+                to="/campaign"
+                className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide"
+              >
+                Sedekah Sekarang
+              </Link>
+            )}
+            {/* Carousel arrows */}
+            <button onClick={heroPrev} aria-label="Sebelumnya" className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            {/* Carousel arrows (decorative) */}
-            <button className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">‹</button>
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">›</button>
+            <button onClick={heroNext} aria-label="Berikutnya" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            {/* Dots */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {heroSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setHeroIdx(i)}
+                  aria-label={`Slide ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${i === heroIdx ? "w-6 bg-white" : "w-1.5 bg-white/60"}`}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Stats bar */}
-          <div className="bg-card rounded-2xl shadow-card border border-border/60 mt-5 grid grid-cols-3 divide-x divide-border overflow-hidden animate-fade-in-up">
+          {/* Stats bar — vertical stacked, divider rows */}
+          <div className="bg-card rounded-2xl shadow-card border border-border/60 mt-5 divide-y divide-border overflow-hidden animate-fade-in-up">
             {[
               { l: "Total Donasi", v: formatRupiah(stats.total) },
               { l: "Jumlah Donasi", v: stats.jumlah.toLocaleString("id-ID") },
-              { l: "Aktif Program", v: stats.aktif },
+              { l: "Aktif Program", v: String(stats.aktif) },
             ].map(s => (
-              <div key={s.l} className="py-4 px-2 text-center">
-                <div className="text-[11px] text-muted-foreground mb-1">{s.l}</div>
-                <div className="font-display font-extrabold text-sm sm:text-base text-foreground">{s.v}</div>
+              <div key={s.l} className="py-4 px-4 text-center">
+                <div className="text-sm text-muted-foreground mb-1">{s.l}</div>
+                <div className="font-display font-extrabold text-base sm:text-lg text-foreground">{s.v}</div>
               </div>
             ))}
           </div>
@@ -100,36 +158,52 @@ const Index = () => {
             <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program Pilihan</h2>
             <p className="text-sm text-muted-foreground">Program prioritas yang membutuhkan</p>
           </div>
-          {/* Carousel of small cards */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 -mx-4 px-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible">
-            {programPilihan.map((c, i) => (
-              <Link
-                key={c.id}
-                to={`/campaign/${c.id}`}
-                className="group flex-shrink-0 w-[80%] sm:w-auto snap-center bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
-                style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
-              >
-                <div className="aspect-[4/3] overflow-hidden bg-muted">
-                  <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500" />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
-                    YAYASAN TERAS DAKWAH <span className="text-primary">✓</span>
+          <div className="relative">
+            {/* Arrow buttons */}
+            <button
+              onClick={() => scrollPilihan("left")}
+              aria-label="Geser kiri"
+              className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-border"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => scrollPilihan("right")}
+              aria-label="Geser kanan"
+              className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white shadow-card text-primary items-center justify-center hover:scale-110 transition-smooth border border-border"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            {/* Scroller */}
+            <div
+              ref={pilihanRef}
+              className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 -mx-4 px-4 scroll-smooth"
+            >
+              {programPilihan.map((c, i) => (
+                <Link
+                  key={c.id}
+                  to={`/campaign/${c.id}`}
+                  className="group flex-shrink-0 w-[80%] sm:w-[calc(33.333%-0.667rem)] snap-center bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-muted">
+                    <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500" />
                   </div>
-                  <div className="text-sm font-bold text-primary mb-2">
-                    {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+                  <div className="p-4">
+                    <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
+                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
+                      YAYASAN TERAS DAKWAH <span className="text-primary">✓</span>
+                    </div>
+                    <div className="text-sm font-bold text-primary mb-2">
+                      {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full bg-progress rounded-full" style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }} />
+                    </div>
                   </div>
-                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full bg-progress rounded-full" style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }} />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="flex justify-center gap-1.5 mt-2">
-            <span className="h-1.5 w-6 rounded-full bg-primary"></span>
-            <span className="h-1.5 w-1.5 rounded-full bg-border"></span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>

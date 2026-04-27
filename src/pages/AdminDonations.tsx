@@ -38,7 +38,16 @@ const AdminDonations = () => {
     if (cRes.data) setCampaigns(cRes.data as Campaign[]);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    // Realtime: refetch saat ada perubahan donations / campaigns
+    const ch = supabase
+      .channel("admin-donations-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "donations" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "campaigns" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
 
   const verify = async (id: string) => {
     const { error } = await supabase.from("donations").update({ status: "verified" }).eq("id", id);
@@ -69,26 +78,36 @@ const AdminDonations = () => {
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  // Real-time stats matching the homepage
+  const totalTerkumpulHome = campaigns.reduce((s: number, c: any) => s + Number(c.terkumpul ?? 0), 0);
+  const jumlahDonasiHome = donations.filter(d => d.status === "verified").length;
+  const aktifProgramHome = campaigns.length;
+
   return (
     <AdminLayout
       title="Daftar Donasi"
       subtitle="Lihat siapa saja yang berdonasi & verifikasi pembayaran"
       back={{ to: "/admin", label: "Kembali ke Dashboard" }}
     >
-      {/* Stats */}
+      {/* Stats — sinkron real-time dengan tampilan home */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-card border border-border rounded-2xl p-5">
-          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Total Donasi (Filter)</div>
-          <div className="font-display font-extrabold text-2xl mt-1">{filtered.length}</div>
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Total Donasi</div>
+          <div className="font-display font-extrabold text-2xl text-primary mt-1">{formatRupiah(totalTerkumpulHome)}</div>
         </div>
         <div className="bg-card border border-border rounded-2xl p-5">
-          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Total Terkumpul (Verified)</div>
-          <div className="font-display font-extrabold text-2xl text-primary mt-1">{formatRupiah(totalVerified)}</div>
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Jumlah Donasi</div>
+          <div className="font-display font-extrabold text-2xl mt-1">{jumlahDonasiHome.toLocaleString("id-ID")}</div>
         </div>
         <div className="bg-card border border-warning/40 rounded-2xl p-5">
-          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Menunggu Verifikasi</div>
-          <div className="font-display font-extrabold text-2xl text-warning mt-1">{totalPending}</div>
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Aktif Program</div>
+          <div className="font-display font-extrabold text-2xl text-warning mt-1">{aktifProgramHome}</div>
         </div>
+      </div>
+
+      {/* Sub-stats: pending */}
+      <div className="text-xs text-muted-foreground mb-4">
+        Menunggu verifikasi: <span className="font-bold text-warning">{donations.filter(d => d.status === "pending").length}</span>
       </div>
 
       {/* Filters */}
