@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import qrisImage from "@/assets/qris-placeholder.png";
+import { buildWaConfirmUrl } from "@/lib/whatsapp";
 
 const schema = z.object({
   nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
@@ -73,6 +74,14 @@ const Donate = () => {
         status: "pending",
       });
       if (insErr) throw insErr;
+
+      // Buka WhatsApp untuk konfirmasi ke admin
+      const waUrl = buildWaConfirmUrl({
+        nama: parse.data.nama,
+        nominal: parse.data.nominal,
+        campaign: campaign?.judul,
+      });
+      window.open(waUrl, "_blank");
 
       setDone(true);
     } catch (e: any) {

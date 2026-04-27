@@ -1,28 +1,20 @@
 import { Layout } from "@/components/Layout";
 import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatRupiah } from "@/lib/format";
-import { CheckCircle2, Eye, LogOut, Loader2 } from "lucide-react";
-
-type Donation = {
-  id: string;
-  nama: string;
-  nominal: number;
-  metode_pembayaran: string;
-  bukti_transfer: string | null;
-  status: string;
-  created_at: string;
-  campaign_id: string | null;
-};
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home } from "lucide-react";
+import logoTerasDakwah from "@/assets/logo-teras-dakwah.png";
 
 const Admin = () => {
+  const nav = useNavigate();
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [donations, setDonations] = useState<Donation[]>([]);
+  const [showPwd, setShowPwd] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+  const [stats, setStats] = useState({ campaigns: 0, donations: 0, pending: 0 });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -36,75 +28,111 @@ const Admin = () => {
       .then(({ data }) => setIsAdmin(!!data));
   }, [session]);
 
-  const loadDonations = () => {
-    supabase.from("donations").select("*").order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) toast.error(error.message);
-        else setDonations((data as Donation[]) ?? []);
-      });
-  };
-
-  useEffect(() => { if (isAdmin) loadDonations(); }, [isAdmin]);
+  useEffect(() => {
+    if (!isAdmin) return;
+    Promise.all([
+      supabase.from("campaigns").select("id", { count: "exact", head: true }),
+      supabase.from("donations").select("id", { count: "exact", head: true }),
+      supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    ]).then(([c, d, p]) => {
+      setStats({ campaigns: c.count ?? 0, donations: d.count ?? 0, pending: p.count ?? 0 });
+    });
+  }, [isAdmin]);
 
   const login = async () => {
+    if (!email || !password) { toast.error("Email & password wajib diisi"); return; }
     setAuthLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setAuthLoading(false);
     if (error) toast.error(error.message);
+    else toast.success("Berhasil masuk");
   };
 
-  const signup = async () => {
-    setAuthLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { emailRedirectTo: `${window.location.origin}/admin` }
-    });
-    setAuthLoading(false);
-    if (error) toast.error(error.message);
-    else toast.success("Akun dibuat. Minta admin existing untuk memberi role admin via Supabase.");
-  };
-
-  const verify = async (id: string) => {
-    const { error } = await supabase.from("donations").update({ status: "verified" }).eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Donasi diverifikasi"); loadDonations(); }
-  };
-
-  const viewBukti = async (path: string) => {
-    const { data, error } = await supabase.storage.from("bukti-transfer").createSignedUrl(path, 60);
-    if (error) toast.error(error.message);
-    else window.open(data.signedUrl, "_blank");
-  };
-
+  // ============ LOGIN PAGE ============
   if (!session) {
     return (
       <Layout>
-        <div className="container py-16 max-w-md">
-          <h1 className="font-display text-3xl font-extrabold mb-2">Admin Login</h1>
-          <p className="text-muted-foreground mb-6 text-sm">Masuk untuk mengelola donasi.</p>
-          <div className="bg-card border border-border/60 rounded-3xl shadow-soft p-6 space-y-4">
-            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email" className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none" />
-            <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none" />
-            <div className="flex gap-2">
-              <button onClick={login} disabled={authLoading} className="flex-1 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-button disabled:opacity-60">
-                {authLoading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Masuk"}
-              </button>
-              <button onClick={signup} disabled={authLoading} className="px-4 py-3 rounded-xl bg-secondary font-semibold hover:bg-secondary/80">Daftar</button>
-            </div>
+        <div className="px-6 pt-6 pb-12">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-smooth">
+            <ArrowLeft className="h-4 w-4" /> Kembali ke Beranda
+          </Link>
+
+          <div className="text-center mt-12 mb-8">
+            <img src={logoTerasDakwah} alt="Teras Dakwah" className="h-20 w-auto mx-auto mb-6" />
+            <h1 className="font-display text-3xl font-extrabold mb-2">Login Admin</h1>
+            <p className="text-muted-foreground text-sm">Masuk untuk mengelola konten website</p>
           </div>
+
+          <div className="bg-card border border-border/60 rounded-2xl shadow-soft p-6 space-y-5">
+            <div>
+              <label className="block text-sm font-bold mb-2">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  type="email"
+                  placeholder="admin@terasdakwah.com"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold mb-2">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && login()}
+                  type={showPwd ? "text" : "password"}
+                  placeholder="Masukkan password"
+                  className="w-full pl-10 pr-10 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(s => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={login}
+              disabled={authLoading}
+              className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-bold shadow-button hover:scale-[1.02] transition-smooth disabled:opacity-60 disabled:hover:scale-100"
+            >
+              {authLoading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Masuk"}
+            </button>
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            © {new Date().getFullYear()} Teras Dakwah. All Rights Reserved.
+          </p>
         </div>
       </Layout>
     );
   }
 
-  if (isAdmin === null) return <Layout><div className="container py-20 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div></Layout>;
+  if (isAdmin === null) {
+    return (
+      <Layout>
+        <div className="container py-20 text-center">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!isAdmin) {
     return (
       <Layout>
-        <div className="container py-16 max-w-md text-center">
+        <div className="px-6 py-16 text-center">
           <h1 className="font-display text-2xl font-extrabold mb-2">Akses Ditolak</h1>
-          <p className="text-muted-foreground mb-6 text-sm">Akun ini bukan admin. Hubungi admin untuk diberi role.</p>
+          <p className="text-muted-foreground mb-6 text-sm">Akun ini bukan admin.</p>
           <p className="text-xs text-muted-foreground mb-6">User ID: <code className="bg-secondary px-2 py-1 rounded">{session.user.id}</code></p>
           <button onClick={() => supabase.auth.signOut()} className="px-5 py-2 rounded-full bg-secondary font-semibold">Keluar</button>
         </div>
@@ -112,72 +140,82 @@ const Admin = () => {
     );
   }
 
+  // ============ DASHBOARD ============
   return (
-    <Layout>
-      <div className="container py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-display text-3xl md:text-4xl font-extrabold">Admin Panel</h1>
-            <p className="text-muted-foreground text-sm">{donations.length} donasi total</p>
+    <div className="min-h-screen bg-muted/30">
+      <header className="bg-background border-b border-border sticky top-0 z-40">
+        <div className="container max-w-6xl flex items-center justify-between h-16 px-4">
+          <div className="flex items-center gap-3">
+            <img src={logoTerasDakwah} alt="Teras Dakwah" className="h-9 w-auto" />
+            <span className="font-display font-bold text-lg">Admin Dashboard</span>
           </div>
-          <button onClick={() => supabase.auth.signOut()} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-sm font-semibold hover:bg-secondary/80">
-            <LogOut className="h-4 w-4" /> Keluar
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary text-xs font-semibold hover:bg-secondary/80 transition-smooth">
+              <Home className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Lihat Website</span>
+            </Link>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-smooth"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container max-w-6xl px-4 py-8">
+        {/* Hero greeting */}
+        <div className="rounded-2xl bg-gradient-to-r from-primary to-primary-dark text-primary-foreground p-6 md:p-8 mb-8 shadow-blue">
+          <h1 className="font-display text-2xl md:text-3xl font-extrabold mb-2">Selamat Datang, Admin! 👋</h1>
+          <p className="text-primary-foreground/90 text-sm">Kelola konten website Yayasan Teras Dakwah Indonesia dari sini</p>
         </div>
 
-        <div className="bg-card rounded-3xl border border-border/60 shadow-soft overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/60 text-left">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Tanggal</th>
-                  <th className="px-4 py-3 font-semibold">Nama</th>
-                  <th className="px-4 py-3 font-semibold">Nominal</th>
-                  <th className="px-4 py-3 font-semibold">Metode</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {donations.map(d => (
-                  <tr key={d.id} className="border-t border-border/60 hover:bg-secondary/30 transition-smooth">
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(d.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</td>
-                    <td className="px-4 py-3 font-semibold">{d.nama}</td>
-                    <td className="px-4 py-3 font-bold text-primary">{formatRupiah(d.nominal)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{d.metode_pembayaran}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        d.status === "verified" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
-                      }`}>
-                        {d.status === "verified" ? "Berhasil" : "Pending"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        {d.bukti_transfer && (
-                          <button onClick={() => viewBukti(d.bukti_transfer!)} className="p-2 rounded-lg hover:bg-secondary transition-smooth" title="Lihat bukti">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        )}
-                        {d.status !== "verified" && (
-                          <button onClick={() => verify(d.id)} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center gap-1 shadow-button">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Verifikasi
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {donations.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">Belum ada donasi.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+          <StatCard label="Total Campaign" value={stats.campaigns} />
+          <StatCard label="Total Donasi" value={stats.donations} />
+          <StatCard label="Donasi Pending" value={stats.pending} highlight />
         </div>
-      </div>
-    </Layout>
+
+        {/* Menu */}
+        <h2 className="font-display text-lg font-bold mb-4">Menu Pengelolaan</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MenuCard
+            to="/admin/campaigns"
+            icon={<Megaphone className="h-6 w-6 text-primary" />}
+            title="Campaign"
+            desc="Kelola campaign donasi: tambah, edit, hapus"
+          />
+          <MenuCard
+            to="/admin/donations"
+            icon={<HandHeart className="h-6 w-6 text-primary" />}
+            title="Donasi"
+            desc="Lihat & verifikasi donasi yang masuk"
+          />
+        </div>
+      </main>
+    </div>
   );
 };
+
+const StatCard = ({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) => (
+  <div className={`rounded-2xl border p-5 bg-card ${highlight ? "border-warning/40" : "border-border"}`}>
+    <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">{label}</div>
+    <div className={`font-display font-extrabold text-3xl mt-1 ${highlight ? "text-warning" : "text-foreground"}`}>{value}</div>
+  </div>
+);
+
+const MenuCard = ({ to, icon, title, desc }: { to: string; icon: React.ReactNode; title: string; desc: string }) => (
+  <Link
+    to={to}
+    className="group rounded-2xl bg-card border border-border p-6 hover:border-primary hover:shadow-soft transition-smooth"
+  >
+    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-smooth">
+      {icon}
+    </div>
+    <div className="font-display font-bold text-lg mb-1">{title}</div>
+    <div className="text-sm text-muted-foreground">{desc}</div>
+  </Link>
+);
 
 export default Admin;
