@@ -147,7 +147,7 @@ const Admin = () => {
         <div className="container max-w-6xl flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
             <img src={logoTerasDakwah} alt="Teras Dakwah" className="h-9 w-auto" />
-            <span className="font-display font-bold text-lg">Admin Dashboard</span>
+            <span className="font-display font-bold text-lg">{"\n"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary text-xs font-semibold hover:bg-secondary/80 transition-smooth">
