@@ -21,8 +21,8 @@ export const CampaignCard = ({ c, index = 0 }: { c: Campaign; index?: number }) 
       className="group block bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-0.5 animate-fade-in-up"
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: "backwards" }}
     >
-      <div className="grid grid-cols-[40%_1fr] sm:grid-cols-[35%_1fr]">
-        <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-muted">
+      <div className="flex flex-col">
+        <div className="relative aspect-[16/9] overflow-hidden bg-muted">
           <img
             src={c.gambar_url ?? "/placeholder.svg"}
             alt={c.judul}
@@ -30,7 +30,7 @@ export const CampaignCard = ({ c, index = 0 }: { c: Campaign; index?: number }) 
             className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500"
           />
         </div>
-        <div className="p-4 sm:p-5 flex flex-col justify-between min-w-0">
+        <div className="p-4 flex flex-col justify-between min-w-0">
           <div>
             <h3 className="font-display font-bold text-sm sm:text-base leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">
               {c.judul}

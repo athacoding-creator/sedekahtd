@@ -27,8 +27,8 @@ const CampaignDetail = () => {
           <ArrowLeft className="h-4 w-4" /> Kembali ke campaign
         </Link>
       </div>
-      <div className="container pb-16 grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 animate-fade-in-up">
+      <div className="container pb-16 space-y-6">
+        <div className="animate-fade-in-up">
           <div className="rounded-3xl overflow-hidden shadow-card aspect-[16/10] bg-muted">
             <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} className="h-full w-full object-cover" />
           </div>
@@ -37,13 +37,13 @@ const CampaignDetail = () => {
               {c.kategori}
             </span>
           )}
-          <h1 className="font-display text-3xl md:text-4xl font-extrabold mt-3 mb-4">{c.judul}</h1>
+          <h1 className="font-display text-2xl font-extrabold mt-3 mb-4 leading-tight">{c.judul}</h1>
           <div className="prose prose-sm max-w-none">
             <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{c.deskripsi}</p>
           </div>
         </div>
 
-        <aside className="lg:sticky lg:top-24 h-fit space-y-4 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
+        <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
           <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6">
             <div className="mb-5">
               <div className="flex justify-between items-end mb-2">
@@ -63,7 +63,7 @@ const CampaignDetail = () => {
               </div>
             </div>
 
-            <Link to={`/donasi/${c.id}`} className="block w-full text-center px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm">
+            <Link to={`/donasi/${c.id}`} className="w-full text-center px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm">
               <Heart className="h-4 w-4 fill-current" /> Sedekah Sekarang
             </Link>
 
@@ -81,7 +81,7 @@ const CampaignDetail = () => {
               Donasi Anda 100% disalurkan ke penerima manfaat. Laporan pertanggungjawaban tersedia untuk donatur.
             </p>
           </div>
-        </aside>
+        </div>
       </div>
     </Layout>
   );
