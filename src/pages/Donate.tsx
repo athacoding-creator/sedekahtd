@@ -5,30 +5,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Wallet, Building2, Smartphone } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft } from "lucide-react";
 import { z } from "zod";
+import qrisImage from "@/assets/qris-placeholder.png";
 
 const schema = z.object({
   nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
   nominal: z.number().int().positive("Nominal harus lebih dari 0").max(1_000_000_000),
-  metode: z.enum(["QRIS", "Transfer Bank", "E-wallet"]),
 });
 
 const nominalQuick = [25000, 50000, 100000, 250000, 500000, 1000000];
-
-const methods = [
-  { id: "QRIS", label: "QRIS", icon: Smartphone },
-  { id: "Transfer Bank", label: "Transfer Bank", icon: Building2 },
-  { id: "E-wallet", label: "E-wallet", icon: Wallet },
-] as const;
 
 const Donate = () => {
   const { id } = useParams();
   const nav = useNavigate();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [nominal, setNominal] = useState<string>("");
-  const [metode, setMetode] = useState<string>("QRIS");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -46,10 +40,22 @@ const Donate = () => {
     setFile(f);
   };
 
-  const submit = async () => {
-    const parse = schema.safeParse({ nama, nominal: Number(nominal), metode: metode as any });
+  const goPay = () => {
+    const parse = schema.safeParse({ nama, nominal: Number(nominal) });
     if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
+    setStep("pay");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const copyNominal = async () => {
+    await navigator.clipboard.writeText(String(nominal));
+    toast.success("Nominal disalin");
+  };
+
+  const submit = async () => {
     if (!file) { toast.error("Silakan upload bukti transfer"); return; }
+    const parse = schema.safeParse({ nama, nominal: Number(nominal) });
+    if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
 
     setLoading(true);
     try {
@@ -62,7 +68,7 @@ const Donate = () => {
         campaign_id: id,
         nama: parse.data.nama,
         nominal: parse.data.nominal,
-        metode_pembayaran: parse.data.metode,
+        metode_pembayaran: "QRIS",
         bukti_transfer: path,
         status: "pending",
       });
@@ -101,13 +107,91 @@ const Donate = () => {
     );
   }
 
+  // STEP: Pembayaran QRIS
+  if (step === "pay") {
+    return (
+      <Layout>
+        <div className="container py-6 max-w-2xl">
+          <button onClick={() => setStep("form")} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-smooth mb-4">
+            <ArrowLeft className="h-4 w-4" /> Ubah data donasi
+          </button>
+
+          <div className="text-center mb-6">
+            <p className="text-sm text-muted-foreground">Terima kasih <span className="font-semibold text-foreground">{nama}</span></p>
+            <p className="text-sm text-muted-foreground">atas donasi yang akan Anda berikan untuk:</p>
+            {campaign && <p className="font-display font-bold text-lg mt-2">{campaign.judul}</p>}
+          </div>
+
+          <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-5">
+            {/* QR Code */}
+            <div className="bg-white rounded-2xl p-4 border border-border/60">
+              <img
+                src={qrisImage}
+                alt="QRIS Yayasan Teras Dakwah"
+                className="w-full max-w-xs mx-auto"
+                width={512}
+                height={640}
+              />
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
+            </p>
+
+            {/* Nominal */}
+            <div className="rounded-2xl border border-border bg-background p-4 flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Nominal donasi</div>
+                <div className="font-display font-extrabold text-2xl text-accent">{formatRupiah(Number(nominal))}</div>
+              </div>
+              <button onClick={copyNominal} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-secondary text-xs font-semibold hover:bg-secondary/80 transition-smooth">
+                <Copy className="h-3.5 w-3.5" /> Salin
+              </button>
+            </div>
+
+            {/* Upload bukti */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">Konfirmasi Pembayaran</label>
+              <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-smooth ${
+                file ? "border-primary bg-primary/5" : "border-border hover:border-primary hover:bg-secondary/40"
+              }`}>
+                <input type="file" accept="image/*,application/pdf" onChange={handleFile} className="hidden" />
+                {file ? (
+                  <>
+                    <CheckCircle2 className="h-6 w-6 text-primary" />
+                    <span className="text-sm font-semibold text-primary">{file.name}</span>
+                    <span className="text-xs text-muted-foreground">Klik untuk ganti</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm font-semibold">Upload bukti transfer</span>
+                    <span className="text-xs text-muted-foreground">PNG, JPG, atau PDF — maks 5MB</span>
+                  </>
+                )}
+              </label>
+            </div>
+
+            <button
+              onClick={submit}
+              disabled={loading || !file}
+              className="w-full px-6 py-4 rounded-2xl bg-primary text-primary-foreground font-extrabold uppercase tracking-wide text-sm shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Mengirim...</>) : "Konfirmasi Pembayaran"}
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // STEP: Form
   return (
     <Layout>
       <div className="container py-10 max-w-2xl">
-        <h1 className="font-display text-3xl md:text-4xl font-extrabold mb-2">Form Donasi</h1>
+        <h1 className="font-display text-3xl font-extrabold mb-2">Form Donasi</h1>
         {campaign && <p className="text-muted-foreground mb-8">Untuk: <span className="font-semibold text-foreground">{campaign.judul}</span></p>}
 
-        <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 md:p-8 space-y-6">
+        <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-6">
           {/* Nama */}
           <div>
             <label className="block text-sm font-semibold mb-2">Nama Donatur</label>
@@ -149,56 +233,17 @@ const Donate = () => {
             </div>
           </div>
 
-          {/* Metode */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Metode Pembayaran</label>
-            <div className="grid grid-cols-3 gap-2">
-              {methods.map(m => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => setMetode(m.id)}
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 text-xs font-semibold transition-smooth ${
-                    metode === m.id ? "bg-primary text-primary-foreground border-primary shadow-button" : "bg-background border-border hover:border-primary"
-                  }`}
-                >
-                  <m.icon className="h-5 w-5" />
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Upload */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Bukti Transfer</label>
-            <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-smooth ${
-              file ? "border-primary bg-primary/5" : "border-border hover:border-primary hover:bg-secondary/40"
-            }`}>
-              <input type="file" accept="image/*,application/pdf" onChange={handleFile} className="hidden" />
-              {file ? (
-                <>
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                  <span className="text-sm font-semibold text-primary">{file.name}</span>
-                  <span className="text-xs text-muted-foreground">Klik untuk ganti</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-sm font-semibold">Pilih bukti transfer</span>
-                  <span className="text-xs text-muted-foreground">PNG, JPG, atau PDF — maks 5MB</span>
-                </>
-              )}
-            </label>
+          {/* Metode (info saja) */}
+          <div className="rounded-xl border border-border bg-background p-4">
+            <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
+            <div className="font-semibold">QRIS — Yayasan Teras Dakwah</div>
           </div>
 
           <button
-            onClick={submit}
-            disabled={loading}
-            className="w-full px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold uppercase tracking-wide text-sm shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={goPay}
+            className="w-full px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold uppercase tracking-wide text-sm shadow-button hover:scale-[1.02] transition-smooth"
           >
-            {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Mengirim...</>) :
-              file ? "Kirim Donasi" : (<><Upload className="h-4 w-4" /> Upload Bukti Dulu</>)}
+            Lanjut ke Pembayaran
           </button>
         </div>
       </div>
