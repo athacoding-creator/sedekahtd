@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { formatRupiahShort } from "@/lib/format";
-import { Users } from "lucide-react";
+import { formatRupiah } from "@/lib/format";
+import { CheckCircle2 } from "lucide-react";
 
 export type Campaign = {
   id: string;
@@ -12,49 +12,47 @@ export type Campaign = {
   kategori: string | null;
 };
 
+/** Card style Teras Dakwah: gambar kiri, info kanan, progress hijau */
 export const CampaignCard = ({ c, index = 0 }: { c: Campaign; index?: number }) => {
   const pct = Math.min(100, Math.round((c.terkumpul / Math.max(1, c.target)) * 100));
   return (
     <Link
       to={`/campaign/${c.id}`}
-      className="group block bg-card rounded-3xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
-      style={{ animationDelay: `${index * 80}ms`, animationFillMode: "backwards" }}
+      className="group block bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-0.5 animate-fade-in-up"
+      style={{ animationDelay: `${index * 60}ms`, animationFillMode: "backwards" }}
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-        <img
-          src={c.gambar_url ?? "/placeholder.svg"}
-          alt={c.judul}
-          loading="lazy"
-          className="h-full w-full object-cover group-hover:scale-110 transition-smooth duration-500"
-        />
-        {c.kategori && (
-          <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-background/90 backdrop-blur text-xs font-semibold text-primary">
-            {c.kategori}
-          </span>
-        )}
-      </div>
-      <div className="p-5">
-        <h3 className="font-display font-bold text-base leading-snug mb-3 line-clamp-2 group-hover:text-primary transition-smooth">
-          {c.judul}
-        </h3>
-        <div className="space-y-2">
-          <div className="h-2 rounded-full bg-secondary overflow-hidden">
-            <div
-              className="h-full gradient-hero rounded-full transition-all duration-700"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-muted-foreground">Terkumpul</span>
-            <span className="font-bold text-primary">{pct}%</span>
-          </div>
-          <div className="flex justify-between items-center pt-2 border-t border-border/60">
-            <div>
-              <div className="text-sm font-bold">{formatRupiahShort(c.terkumpul)}</div>
-              <div className="text-[10px] text-muted-foreground">dari {formatRupiahShort(c.target)}</div>
+      <div className="grid grid-cols-[40%_1fr] sm:grid-cols-[35%_1fr]">
+        <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-muted">
+          <img
+            src={c.gambar_url ?? "/placeholder.svg"}
+            alt={c.judul}
+            loading="lazy"
+            className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500"
+          />
+        </div>
+        <div className="p-4 sm:p-5 flex flex-col justify-between min-w-0">
+          <div>
+            <h3 className="font-display font-bold text-sm sm:text-base leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">
+              {c.judul}
+            </h3>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3">
+              <span className="truncate">YAYASAN BERKAHKITA</span>
+              <CheckCircle2 className="h-3 w-3 text-primary flex-shrink-0 fill-primary text-primary-foreground" />
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Users className="h-3 w-3" /> Donatur
+            <div className="text-sm font-bold text-primary mb-2">
+              {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full bg-progress rounded-full transition-all duration-700"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-muted-foreground">{pct}% tercapai</span>
+              <span className="text-muted-foreground">dari {formatRupiah(c.target).replace("Rp ", "Rp")}</span>
             </div>
           </div>
         </div>

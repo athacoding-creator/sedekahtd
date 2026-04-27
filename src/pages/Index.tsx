@@ -3,111 +3,207 @@ import { CampaignCard, Campaign } from "@/components/CampaignCard";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Heart, ShieldCheck, Sparkles, Users } from "lucide-react";
-import heroImg from "@/assets/hero-donation.jpg";
+import { formatRupiah } from "@/lib/format";
+import bannerHero from "@/assets/banner-hero.jpg";
+
+type PublicDonation = {
+  id: string;
+  nama: string;
+  nominal: number;
+  pesan: string | null;
+  created_at: string;
+};
+
+const timeAgo = (d: string) => {
+  const diff = Date.now() - new Date(d).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days < 1) return "hari ini";
+  if (days < 7) return `${days} hari yang lalu`;
+  if (days < 30) return `${Math.floor(days / 7)} minggu yang lalu`;
+  if (days < 365) return `${Math.floor(days / 30)} bulan yang lalu`;
+  return `${Math.floor(days / 365)} tahun yang lalu`;
+};
 
 const Index = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [donations, setDonations] = useState<PublicDonation[]>([]);
+  const [stats, setStats] = useState({ total: 0, jumlah: 0, aktif: 0 });
+  const [showAllDonors, setShowAllDonors] = useState(false);
+  const [showAllCampaigns, setShowAllCampaigns] = useState(false);
 
   useEffect(() => {
-    supabase.from("campaigns").select("*").order("created_at", { ascending: false }).limit(4)
-      .then(({ data }) => setCampaigns((data as Campaign[]) ?? []));
+    supabase.from("campaigns").select("*").order("created_at", { ascending: false })
+      .then(({ data }) => {
+        const list = (data as Campaign[]) ?? [];
+        setCampaigns(list);
+        const total = list.reduce((a, b) => a + Number(b.terkumpul), 0);
+        setStats(s => ({ ...s, total, aktif: list.length }));
+      });
+
+    supabase.from("public_donations").select("*").limit(50)
+      .then(({ data }) => {
+        const list = (data as PublicDonation[]) ?? [];
+        setDonations(list);
+        setStats(s => ({ ...s, jumlah: list.length }));
+      });
   }, []);
+
+  const programPilihan = campaigns.slice(0, 3);
+  const programLainnya = showAllCampaigns ? campaigns : campaigns.slice(0, 5);
+  const visibleDonors = showAllDonors ? donations : donations.slice(0, 5);
 
   return (
     <Layout>
-      {/* HERO */}
-      <section className="relative overflow-hidden gradient-soft">
-        <div className="absolute inset-0 opacity-40 pointer-events-none">
-          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute top-40 -left-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
-        </div>
-        <div className="container relative py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
-          <div className="animate-fade-in-up">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6">
-              <Sparkles className="h-3.5 w-3.5" /> Platform sedekah amanah & transparan
-            </span>
-            <h1 className="font-display text-4xl md:text-6xl font-extrabold leading-[1.05] mb-5">
-              Sedekahmu hari ini,<br />
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">berkah selamanya</span>
-            </h1>
-            <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-lg">
-              Salurkan kebaikanmu lewat donasi online yang mudah, cepat, dan transparan. Setiap rupiah yang kamu titipkan kami amanahkan langsung kepada yang membutuhkan.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/campaign" className="px-6 py-3.5 rounded-full gradient-hero text-primary-foreground font-semibold shadow-button hover:shadow-glow transition-smooth flex items-center gap-2 group">
-                Mulai Donasi <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-smooth" />
-              </Link>
-              <Link to="/tentang" className="px-6 py-3.5 rounded-full bg-background border border-border font-semibold hover:bg-secondary transition-smooth">
-                Pelajari Lebih
-              </Link>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mt-10 max-w-md">
-              {[
-                { n: "12K+", l: "Donatur" },
-                { n: "Rp 8M+", l: "Tersalurkan" },
-                { n: "50+", l: "Campaign" },
-              ].map((s) => (
-                <div key={s.l} className="text-center md:text-left">
-                  <div className="font-display font-extrabold text-xl md:text-2xl text-primary">{s.n}</div>
-                  <div className="text-xs text-muted-foreground">{s.l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="relative animate-scale-in">
-            <div className="absolute inset-4 rounded-[2.5rem] gradient-hero blur-2xl opacity-30" />
-            <img src={heroImg} alt="Donasi online amanah" className="relative rounded-[2rem] shadow-card w-full animate-float" />
-          </div>
-        </div>
-      </section>
-
-      {/* TRUST */}
-      <section className="container py-12">
-        <div className="grid md:grid-cols-3 gap-4">
-          {[
-            { icon: ShieldCheck, t: "100% Amanah", d: "Setiap donasi tercatat dan diverifikasi admin" },
-            { icon: Heart, t: "Mudah & Cepat", d: "Donasi cukup dalam beberapa klik saja" },
-            { icon: Users, t: "Transparan", d: "Laporan donasi terbuka untuk semua donatur" },
-          ].map((f, i) => (
-            <div key={f.t} className="p-6 rounded-2xl bg-card border border-border/60 shadow-soft hover:shadow-card hover:-translate-y-1 transition-smooth animate-fade-in-up" style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}>
-              <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
-                <f.icon className="h-5 w-5" />
+      {/* HERO BANNER */}
+      <section className="bg-secondary/40 pt-6 pb-4">
+        <div className="container max-w-4xl">
+          <div className="relative rounded-3xl overflow-hidden shadow-card aspect-[16/9] sm:aspect-[21/9] animate-fade-in">
+            <img src={bannerHero} alt="Sedekah Jum'at - Pahala Berlipat" className="absolute inset-0 h-full w-full object-cover" />
+            {/* Logo overlays */}
+            <div className="absolute top-4 left-4 flex gap-2">
+              <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-[10px] font-bold text-primary-dark shadow-soft">
+                ⌂ Baitulmaal
               </div>
-              <h3 className="font-display font-bold mb-1">{f.t}</h3>
-              <p className="text-sm text-muted-foreground">{f.d}</p>
+              <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-[10px] font-bold text-primary-dark shadow-soft">
+                🕌 Masjid
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CAMPAIGNS */}
-      <section className="container py-12">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-2">Campaign Pilihan</h2>
-            <p className="text-muted-foreground">Pilih campaign yang ingin kamu dukung hari ini</p>
+            {/* CTA tombol kuning */}
+            <button className="absolute bottom-4 right-4 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-accent text-accent-foreground font-extrabold text-xs sm:text-sm shadow-button hover:scale-105 transition-smooth uppercase tracking-wide">
+              Sedekah Sekarang
+            </button>
+            {/* Carousel arrows (decorative) */}
+            <button className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">‹</button>
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/80 backdrop-blur text-primary flex items-center justify-center shadow-soft hover:bg-white">›</button>
           </div>
-          <Link to="/campaign" className="hidden md:inline-flex items-center gap-1 text-primary font-semibold hover:gap-2 transition-all">
-            Lihat semua <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {campaigns.map((c, i) => <CampaignCard key={c.id} c={c} index={i} />)}
+
+          {/* Stats bar */}
+          <div className="bg-card rounded-2xl shadow-card border border-border/60 mt-5 grid grid-cols-3 divide-x divide-border overflow-hidden animate-fade-in-up">
+            {[
+              { l: "Total Donasi", v: formatRupiah(stats.total) },
+              { l: "Jumlah Donasi", v: stats.jumlah.toLocaleString("id-ID") },
+              { l: "Aktif Program", v: stats.aktif },
+            ].map(s => (
+              <div key={s.l} className="py-4 px-2 text-center">
+                <div className="text-[11px] text-muted-foreground mb-1">{s.l}</div>
+                <div className="font-display font-extrabold text-sm sm:text-base text-foreground">{s.v}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="container py-16">
-        <div className="relative overflow-hidden rounded-3xl gradient-hero p-10 md:p-14 text-primary-foreground">
-          <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative max-w-2xl">
-            <h3 className="font-display text-3xl md:text-4xl font-extrabold mb-3">Mari berbagi, mari berkah</h3>
-            <p className="opacity-90 mb-6">Sebaik-baik manusia adalah yang paling bermanfaat bagi sesama. Mulai sedekah online hari ini.</p>
-            <Link to="/campaign" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-background text-primary font-semibold hover:scale-105 transition-smooth">
-              Donasi Sekarang <ArrowRight className="h-4 w-4" />
-            </Link>
+      {/* PROGRAM PILIHAN */}
+      <section className="py-12">
+        <div className="container max-w-4xl">
+          <div className="text-center mb-8 animate-fade-in-up">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program Pilihan</h2>
+            <p className="text-sm text-muted-foreground">Program prioritas yang membutuhkan</p>
+          </div>
+          {/* Carousel of small cards */}
+          <div className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 -mx-4 px-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible">
+            {programPilihan.map((c, i) => (
+              <Link
+                key={c.id}
+                to={`/campaign/${c.id}`}
+                className="group flex-shrink-0 w-[80%] sm:w-auto snap-center bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-card border border-border/60 transition-smooth hover:-translate-y-1 animate-fade-in-up"
+                style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
+              >
+                <div className="aspect-[4/3] overflow-hidden bg-muted">
+                  <img src={c.gambar_url ?? "/placeholder.svg"} alt={c.judul} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-smooth duration-500" />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-display font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-primary transition-smooth">{c.judul}</h3>
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground mb-2">
+                    YAYASAN BERKAHKITA <span className="text-primary">✓</span>
+                  </div>
+                  <div className="text-sm font-bold text-primary mb-2">
+                    {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-muted-foreground">terkumpul</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                    <div className="h-full bg-progress rounded-full" style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="flex justify-center gap-1.5 mt-2">
+            <span className="h-1.5 w-6 rounded-full bg-primary"></span>
+            <span className="h-1.5 w-1.5 rounded-full bg-border"></span>
+          </div>
+        </div>
+      </section>
+
+      {/* PROGRAM BERKAHKITA */}
+      <section className="py-12 bg-secondary/40 border-y border-border/60">
+        <div className="container max-w-3xl">
+          <div className="text-center mb-8 animate-fade-in-up">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">Program BerkahKita</h2>
+            <p className="text-sm text-muted-foreground">Recharge iman dengan program-program BerkahKita</p>
+          </div>
+          <div className="space-y-4">
+            {programLainnya.map((c, i) => <CampaignCard key={c.id} c={c} index={i} />)}
+          </div>
+          {!showAllCampaigns && campaigns.length > 5 && (
+            <div className="text-center mt-8">
+              <button onClick={() => setShowAllCampaigns(true)} className="px-8 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-primary-foreground transition-smooth">
+                Load more
+              </button>
+            </div>
+          )}
+          {showAllCampaigns && (
+            <div className="text-center mt-8">
+              <Link to="/campaign" className="px-8 py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-primary-foreground transition-smooth">
+                Lihat semua campaign
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ORANG-ORANG BAIK */}
+      <section className="py-12">
+        <div className="container max-w-3xl">
+          <div className="text-center mb-8 animate-fade-in-up">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2">#orang-orang baik</h2>
+            <p className="text-sm text-muted-foreground">Berkumpul memberikan bantuan terbaik</p>
+          </div>
+          <div className="bg-secondary/40 rounded-3xl p-4 sm:p-6 space-y-3">
+            {visibleDonors.length === 0 && (
+              <div className="text-center py-12 text-sm text-muted-foreground">Belum ada donatur. Jadilah yang pertama!</div>
+            )}
+            {visibleDonors.map((d, i) => (
+              <div key={d.id} className="bg-card rounded-2xl p-4 shadow-soft border border-border/60 animate-fade-in-up" style={{ animationDelay: `${i * 50}ms`, animationFillMode: "backwards" }}>
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <div className="font-display font-bold text-sm">{d.nama}</div>
+                  <div className="text-[11px] text-muted-foreground whitespace-nowrap">{timeAgo(d.created_at)}</div>
+                </div>
+                <div className="text-sm text-muted-foreground mb-1">
+                  Donasi <span className="font-bold text-primary">{formatRupiah(d.nominal)}</span>
+                </div>
+                {d.pesan && <div className="text-xs text-muted-foreground italic">"{d.pesan}"</div>}
+              </div>
+            ))}
+            {donations.length > 5 && !showAllDonors && (
+              <div className="text-center pt-4">
+                <button onClick={() => setShowAllDonors(true)} className="px-8 py-2.5 rounded-full bg-foreground text-background font-semibold text-sm hover:opacity-90 transition-smooth">
+                  Loadmore
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* TENTANG */}
+      <section className="py-12">
+        <div className="container max-w-2xl text-center">
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold mb-2 animate-fade-in-up">Tentang BerkahKita</h2>
+          <p className="text-sm text-muted-foreground mb-6">Tempat sedekah amanah dan transparan untuk umat</p>
+          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed text-left">
+            <p>Yayasan BerkahKita Indonesia, sebagai salah satu penggerak kebaikan sejak tahun 2011.</p>
+            <p>Manfaat untuk umat dan masyarakat menjadi salah satu tagline kami dalam bergerak, dan kami pun memiliki prinsip bahwa semakin banyak penerima manfaat, semakin banyak pula saksi kita di hari akhirat. Berarti harus selalu bergerak dan bermanfaat bagi manusia sekitarnya.</p>
+            <p>Apalagi sebaik-baiknya manusia adalah yang bermanfaat bagi sesama, maka BerkahKita berkomitmen memberikan pelayanan terbaik dalam hal Dakwah, sosial kemanusiaan dan juga perekonomian umat.</p>
           </div>
         </div>
       </section>

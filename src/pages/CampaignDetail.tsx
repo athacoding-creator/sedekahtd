@@ -56,15 +56,15 @@ const CampaignDetail = () => {
                 </div>
               </div>
               <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full gradient-hero rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                <div className="h-full bg-progress rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
               </div>
               <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                 <Target className="h-3 w-3" /> Target: {formatRupiah(c.target)}
               </div>
             </div>
 
-            <Link to={`/donasi/${c.id}`} className="block w-full text-center px-6 py-4 rounded-2xl gradient-hero text-primary-foreground font-bold shadow-button hover:shadow-glow transition-smooth flex items-center justify-center gap-2">
-              <Heart className="h-4 w-4 fill-current" /> Donasi Sekarang
+            <Link to={`/donasi/${c.id}`} className="block w-full text-center px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm">
+              <Heart className="h-4 w-4 fill-current" /> Sedekah Sekarang
             </Link>
 
             <button className="mt-3 w-full px-6 py-3 rounded-2xl bg-secondary text-foreground font-semibold hover:bg-secondary/80 transition-smooth flex items-center justify-center gap-2">
