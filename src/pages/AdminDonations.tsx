@@ -64,6 +64,11 @@ const AdminDonations = () => {
   const totalVerified = filtered.filter(d => d.status === "verified").reduce((s, d) => s + d.nominal, 0);
   const totalPending = filtered.filter(d => d.status === "pending").length;
 
+  const openWa = (d: Donation) => {
+    const text = `Halo ${d.nama}, terima kasih atas donasi sebesar Rp ${new Intl.NumberFormat("id-ID").format(d.nominal)} untuk ${campaignName(d.campaign_id)}.`;
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
   // Real-time stats matching the homepage
   const totalTerkumpulHome = campaigns.reduce((s: number, c: any) => s + Number(c.terkumpul ?? 0), 0);
   const jumlahDonasiHome = donations.filter(d => d.status === "verified").length;
