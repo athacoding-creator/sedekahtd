@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import bannerHero from "@/assets/banner-hero.jpg";
-import { ChevronLeft, ChevronRight, TrendingUp, Users, Layers } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import CountUp from "react-countup";
 
 type PublicDonation = {
   id: string;
@@ -118,11 +119,7 @@ const Index = () => {
     el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   };
 
-  const statsData = [
-    { label: "Total Donasi", value: formatRupiah(stats.total), icon: TrendingUp, color: "text-primary" },
-    { label: "Jumlah Donasi", value: stats.jumlah.toLocaleString("id-ID"), icon: Users, color: "text-emerald-500" },
-    { label: "Aktif Program", value: String(stats.aktif), icon: Layers, color: "text-amber-500" },
-  ];
+
 
   const currentHero = heroSlides[heroIdx];
 
@@ -204,20 +201,26 @@ const Index = () => {
 
           {/* Stats Cards */}
           <div className="mt-4 bg-white rounded-2xl shadow-card border border-slate-100 overflow-hidden animate-fade-in-up">
-            {statsData.map((s, idx) => (
-              <div
-                key={s.label}
-                className={`flex items-center justify-between px-5 py-4 ${idx < statsData.length - 1 ? "border-b border-slate-100" : ""}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center ${s.color}`}>
-                    <s.icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm text-slate-500 font-medium">{s.label}</span>
-                </div>
-                <span className="font-display font-bold text-base text-slate-800 tracking-tight">{s.value}</span>
+            <div className="flex flex-col divide-y divide-slate-100">
+              <div className="flex flex-col items-center py-4 px-5">
+                <span className="text-sm text-slate-500 font-medium mb-1">Total Donasi</span>
+                <span className="font-display font-bold text-base text-slate-800 tracking-tight">
+                  Rp <CountUp end={stats.total} duration={2} separator="." useEasing />
+                </span>
               </div>
-            ))}
+              <div className="flex flex-col items-center py-4 px-5">
+                <span className="text-sm text-slate-500 font-medium mb-1">Jumlah Donasi</span>
+                <span className="font-display font-bold text-base text-slate-800 tracking-tight">
+                  <CountUp end={stats.jumlah} duration={2} separator="." useEasing />
+                </span>
+              </div>
+              <div className="flex flex-col items-center py-4 px-5">
+                <span className="text-sm text-slate-500 font-medium mb-1">Aktif Program</span>
+                <span className="font-display font-bold text-base text-slate-800 tracking-tight">
+                  <CountUp end={stats.aktif} duration={2} useEasing />
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
