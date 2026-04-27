@@ -14,6 +14,8 @@ import AdminDonations from "./pages/AdminDonations.tsx";
 import AdminHeroes from "./pages/AdminHeroes.tsx";
 import AdminQris from "./pages/AdminQris.tsx";
 import AdminStorage from "./pages/AdminStorage.tsx";
+import AdminSettings from "./pages/AdminSettings.tsx";
+import FacebookPixel from "./components/FacebookPixel.tsx";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +25,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        {/* Facebook Pixel — dimuat di semua halaman, inject script dari DB */}
+        <FacebookPixel />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/campaign" element={<CampaignList />} />
@@ -34,6 +38,7 @@ const App = () => (
           <Route path="/admin/heroes" element={<AdminHeroes />} />
           <Route path="/admin/qris" element={<AdminQris />} />
           <Route path="/admin/storage" element={<AdminStorage />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home, Image as ImageIcon, QrCode, HardDrive } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home, Image as ImageIcon, QrCode, HardDrive, Settings } from "lucide-react";
 import tdlogo from "@/assets/td-logo.png";
 import logoterasdakwah from "@/assets/logo-teras-dakwah.png";
 
@@ -222,6 +222,12 @@ const Admin = () => {
             icon={<HardDrive className="h-6 w-6 text-primary" />}
             title="Storage"
             desc="Lihat dan hapus bukti pembayaran donatur"
+          />
+          <MenuCard
+            to="/admin/settings"
+            icon={<Settings className="h-6 w-6 text-primary" />}
+            title="Pengaturan"
+            desc="Facebook Pixel, Google Analytics, dan integrasi lainnya"
           />
         </div>
       </main>
