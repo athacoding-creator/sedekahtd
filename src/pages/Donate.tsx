@@ -5,10 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode } from "lucide-react";
 import { z } from "zod";
-import qrisImage from "@/assets/qris-placeholder.png";
+import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
+
+type QrisData = {
+  id: string;
+  nama: string;
+  gambar_url: string;
+  deskripsi: string | null;
+};
+
+type CampaignWithQris = Campaign & {
+  qris_id: string | null;
+  qris_list: QrisData | null;
+};
 
 const schema = z.object({
   nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
@@ -20,7 +32,7 @@ const nominalQuick = [25000, 50000, 100000, 250000, 500000, 1000000];
 const Donate = () => {
   const { id } = useParams();
   const nav = useNavigate();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [campaign, setCampaign] = useState<CampaignWithQris | null>(null);
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [nominal, setNominal] = useState<string>("");
@@ -30,9 +42,15 @@ const Donate = () => {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from("campaigns").select("*").eq("id", id).maybeSingle()
-      .then(({ data }) => setCampaign(data as Campaign));
+    supabase
+      .from("campaigns")
+      .select("*, qris_list(id, nama, gambar_url, deskripsi)")
+      .eq("id", id)
+      .maybeSingle()
+      .then(({ data }) => setCampaign(data as CampaignWithQris));
   }, [id]);
+
+  const qris = campaign?.qris_list ?? null;
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -69,7 +87,7 @@ const Donate = () => {
         campaign_id: id,
         nama: parse.data.nama,
         nominal: parse.data.nominal,
-        metode_pembayaran: "QRIS",
+        metode_pembayaran: qris ? `QRIS - ${qris.nama}` : "QRIS",
         bukti_transfer: path,
         status: "pending",
       });
@@ -134,17 +152,44 @@ const Donate = () => {
           <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-5">
             {/* QR Code */}
             <div className="bg-white rounded-2xl p-4 border border-border/60">
-              <img
-                src={qrisImage}
-                alt="QRIS Yayasan Teras Dakwah"
-                className="w-full max-w-xs mx-auto"
-                width={512}
-                height={640}
-              />
+              {qris ? (
+                <div className="text-center">
+                  <img
+                    src={qris.gambar_url}
+                    alt={qris.nama}
+                    className="w-full max-w-xs mx-auto"
+                  />
+                  <p className="text-sm font-semibold mt-2 text-foreground">{qris.nama}</p>
+                  {qris.deskripsi && (
+                    <p className="text-xs text-muted-foreground mt-1">{qris.deskripsi}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <img
+                    src={qrisPlaceholder}
+                    alt="QRIS Yayasan Teras Dakwah"
+                    className="w-full max-w-xs mx-auto"
+                    width={512}
+                    height={640}
+                  />
+                  <p className="text-sm font-semibold mt-2 text-foreground">QRIS — Yayasan Teras Dakwah</p>
+                </div>
+              )}
             </div>
-            <p className="text-center text-xs text-muted-foreground">
-              Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
-            </p>
+
+            {!qris && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                <QrCode className="h-4 w-4 flex-shrink-0" />
+                Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
+              </div>
+            )}
+
+            {qris && (
+              <p className="text-center text-xs text-muted-foreground">
+                Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
+              </p>
+            )}
 
             {/* Nominal */}
             <div className="rounded-2xl border border-border bg-background p-4 flex items-center justify-between">
@@ -242,10 +287,24 @@ const Donate = () => {
             </div>
           </div>
 
-          {/* Metode (info saja) */}
+          {/* Metode pembayaran */}
           <div className="rounded-xl border border-border bg-background p-4">
             <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
-            <div className="font-semibold">QRIS — Yayasan Teras Dakwah</div>
+            {qris ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={qris.gambar_url}
+                  alt={qris.nama}
+                  className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5"
+                />
+                <div>
+                  <div className="font-semibold text-sm">{qris.nama}</div>
+                  {qris.deskripsi && <div className="text-xs text-muted-foreground">{qris.deskripsi}</div>}
+                </div>
+              </div>
+            ) : (
+              <div className="font-semibold">QRIS — Yayasan Teras Dakwah</div>
+            )}
           </div>
 
           <button

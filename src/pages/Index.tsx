@@ -15,6 +15,13 @@ type PublicDonation = {
   created_at: string;
 };
 
+type HeroSlide = {
+  id: string;
+  judul: string;
+  gambar_url: string;
+  link_url: string | null;
+};
+
 const timeAgo = (d: string) => {
   const diff = Date.now() - new Date(d).getTime();
   const days = Math.floor(diff / 86400000);
@@ -29,10 +36,32 @@ const Index = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [donations, setDonations] = useState<PublicDonation[]>([]);
   const [stats, setStats] = useState({ total: 0, jumlah: 0, aktif: 0 });
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [showAllDonors, setShowAllDonors] = useState(false);
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
 
   useEffect(() => {
+    // Load hero slides from database
+    supabase
+      .from("heroes")
+      .select("id, judul, gambar_url, link_url")
+      .eq("aktif", true)
+      .order("urutan", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setHeroSlides(data as HeroSlide[]);
+        } else {
+          // Fallback to default banner if no heroes in DB
+          setHeroSlides([{
+            id: "default",
+            judul: "Sedekah Sekarang",
+            gambar_url: bannerHero,
+            link_url: "/campaign",
+          }]);
+        }
+      });
+
+    // Load campaigns with real-time subscription
     supabase.from("campaigns").select("*").order("created_at", { ascending: false })
       .then(({ data }) => {
         const list = (data as Campaign[]) ?? [];
@@ -47,17 +76,30 @@ const Index = () => {
         setDonations(list);
         setStats(s => ({ ...s, jumlah: list.length }));
       });
+
+    // Real-time: update campaign terkumpul when verified
+    const channel = supabase
+      .channel("index-campaigns-realtime")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "campaigns" }, (payload) => {
+        setCampaigns(prev => {
+          const updated = prev.map(c =>
+            c.id === payload.new.id ? { ...c, terkumpul: (payload.new as Campaign).terkumpul } : c
+          );
+          const total = updated.reduce((a, b) => a + Number(b.terkumpul), 0);
+          setStats(s => ({ ...s, total }));
+          return updated;
+        });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const programPilihan = campaigns;
   const programLainnya = showAllCampaigns ? campaigns : campaigns.slice(0, 5);
   const visibleDonors = showAllDonors ? donations : donations.slice(0, 5);
 
-  // Hero carousel slides: main banner + top campaign images
-  const heroSlides = [
-    { type: "banner" as const, img: bannerHero, title: "Sedekah Jum'at" },
-    ...campaigns.slice(0, 3).map(c => ({ type: "campaign" as const, img: c.gambar_url ?? bannerHero, title: c.judul, id: c.id })),
-  ];
+  // Hero carousel
   const [heroIdx, setHeroIdx] = useState(0);
   useEffect(() => {
     if (heroSlides.length <= 1) return;
@@ -82,6 +124,8 @@ const Index = () => {
     { label: "Aktif Program", value: String(stats.aktif), icon: Layers, color: "text-amber-500" },
   ];
 
+  const currentHero = heroSlides[heroIdx];
+
   return (
     <Layout>
       {/* HERO BANNER */}
@@ -91,9 +135,9 @@ const Index = () => {
           <div className="relative rounded-2xl overflow-hidden shadow-card animate-fade-in" style={{ aspectRatio: "16/9" }}>
             {heroSlides.map((slide, i) => (
               <img
-                key={i}
-                src={slide.img}
-                alt={slide.title}
+                key={slide.id}
+                src={slide.gambar_url}
+                alt={slide.judul}
                 className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i === heroIdx ? "opacity-100" : "opacity-0"}`}
               />
             ))}
@@ -114,16 +158,9 @@ const Index = () => {
             </div>
 
             {/* CTA button */}
-            {heroSlides[heroIdx]?.type === "campaign" ? (
+            {currentHero && (
               <Link
-                to={`/campaign/${(heroSlides[heroIdx] as any).id}`}
-                className="absolute bottom-4 right-4 px-5 py-2.5 rounded-full bg-accent text-accent-foreground font-bold text-[11px] shadow-button hover:scale-105 transition-smooth uppercase tracking-widest"
-              >
-                Sedekah Sekarang
-              </Link>
-            ) : (
-              <Link
-                to="/campaign"
+                to={currentHero.link_url ?? "/campaign"}
                 className="absolute bottom-4 right-4 px-5 py-2.5 rounded-full bg-accent text-accent-foreground font-bold text-[11px] shadow-button hover:scale-105 transition-smooth uppercase tracking-widest"
               >
                 Sedekah Sekarang
@@ -131,32 +168,38 @@ const Index = () => {
             )}
 
             {/* Carousel arrows */}
-            <button
-              onClick={heroPrev}
-              aria-label="Sebelumnya"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/85 backdrop-blur-sm text-slate-700 flex items-center justify-center shadow-card hover:bg-white hover:scale-110 transition-smooth"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={heroNext}
-              aria-label="Berikutnya"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/85 backdrop-blur-sm text-slate-700 flex items-center justify-center shadow-card hover:bg-white hover:scale-110 transition-smooth"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            {heroSlides.length > 1 && (
+              <>
+                <button
+                  onClick={heroPrev}
+                  aria-label="Sebelumnya"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/85 backdrop-blur-sm text-slate-700 flex items-center justify-center shadow-card hover:bg-white hover:scale-110 transition-smooth"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={heroNext}
+                  aria-label="Berikutnya"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/85 backdrop-blur-sm text-slate-700 flex items-center justify-center shadow-card hover:bg-white hover:scale-110 transition-smooth"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </>
+            )}
 
             {/* Dots */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {heroSlides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setHeroIdx(i)}
-                  aria-label={`Slide ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === heroIdx ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
-                />
-              ))}
-            </div>
+            {heroSlides.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {heroSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setHeroIdx(i)}
+                    aria-label={`Slide ${i + 1}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${i === heroIdx ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Stats Cards */}

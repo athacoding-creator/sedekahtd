@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home, Image as ImageIcon, QrCode, HardDrive } from "lucide-react";
 import tdlogo from "@/assets/td-logo.png";
 import logoterasdakwah from "@/assets/logo-teras-dakwah.png";
 
@@ -15,7 +15,7 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
-  const [stats, setStats] = useState({ campaigns: 0, donations: 0, pending: 0 });
+  const [stats, setStats] = useState({ campaigns: 0, donations: 0, pending: 0, heroes: 0, qris: 0 });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -35,8 +35,16 @@ const Admin = () => {
       supabase.from("campaigns").select("id", { count: "exact", head: true }),
       supabase.from("donations").select("id", { count: "exact", head: true }),
       supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    ]).then(([c, d, p]) => {
-      setStats({ campaigns: c.count ?? 0, donations: d.count ?? 0, pending: p.count ?? 0 });
+      supabase.from("heroes").select("id", { count: "exact", head: true }),
+      supabase.from("qris_list").select("id", { count: "exact", head: true }),
+    ]).then(([c, d, p, h, q]) => {
+      setStats({
+        campaigns: c.count ?? 0,
+        donations: d.count ?? 0,
+        pending: p.count ?? 0,
+        heroes: h.count ?? 0,
+        qris: q.count ?? 0,
+      });
     });
   }, [isAdmin]);
 
@@ -147,8 +155,7 @@ const Admin = () => {
       <header className="bg-background border-b border-border sticky top-0 z-40">
         <div className="container max-w-6xl flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
-            <img src={logoterasdakwah } alt="Teras Dakwah" className="h-9 w-auto" />
-            <span className="font-display font-bold text-lg">{"\n"}</span>
+            <img src={logoterasdakwah} alt="Teras Dakwah" className="h-9 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             <Link to="/" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary text-xs font-semibold hover:bg-secondary/80 transition-smooth">
@@ -172,10 +179,12 @@ const Admin = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-          <StatCard label="Total Campaign" value={stats.campaigns} />
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-10">
+          <StatCard label="Campaign" value={stats.campaigns} />
           <StatCard label="Total Donasi" value={stats.donations} />
-          <StatCard label="Donasi Pending" value={stats.pending} highlight />
+          <StatCard label="Pending" value={stats.pending} highlight />
+          <StatCard label="Hero Banner" value={stats.heroes} />
+          <StatCard label="QRIS" value={stats.qris} />
         </div>
 
         {/* Menu */}
@@ -185,13 +194,34 @@ const Admin = () => {
             to="/admin/campaigns"
             icon={<Megaphone className="h-6 w-6 text-primary" />}
             title="Campaign"
-            desc="Kelola campaign donasi: tambah, edit, hapus"
+            desc="Kelola campaign donasi: tambah, edit, hapus, pilih QRIS"
+            badge="Real-time"
           />
           <MenuCard
             to="/admin/donations"
             icon={<HandHeart className="h-6 w-6 text-primary" />}
             title="Donasi"
             desc="Lihat & verifikasi donasi yang masuk"
+            badge={stats.pending > 0 ? `${stats.pending} pending` : undefined}
+            badgeColor="warning"
+          />
+          <MenuCard
+            to="/admin/heroes"
+            icon={<ImageIcon className="h-6 w-6 text-primary" />}
+            title="Hero Banner"
+            desc="Atur tampilan slider/banner di halaman utama"
+          />
+          <MenuCard
+            to="/admin/qris"
+            icon={<QrCode className="h-6 w-6 text-primary" />}
+            title="Kelola QRIS"
+            desc="Tambah dan kelola data QRIS untuk setiap campaign"
+          />
+          <MenuCard
+            to="/admin/storage"
+            icon={<HardDrive className="h-6 w-6 text-primary" />}
+            title="Storage"
+            desc="Lihat dan hapus bukti pembayaran donatur"
           />
         </div>
       </main>
@@ -200,19 +230,39 @@ const Admin = () => {
 };
 
 const StatCard = ({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) => (
-  <div className={`rounded-2xl border p-5 bg-card ${highlight ? "border-warning/40" : "border-border"}`}>
+  <div className={`rounded-2xl border p-4 bg-card ${highlight ? "border-warning/40" : "border-border"}`}>
     <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">{label}</div>
     <div className={`font-display font-extrabold text-3xl mt-1 ${highlight ? "text-warning" : "text-foreground"}`}>{value}</div>
   </div>
 );
 
-const MenuCard = ({ to, icon, title, desc }: { to: string; icon: React.ReactNode; title: string; desc: string }) => (
+const MenuCard = ({
+  to, icon, title, desc, badge, badgeColor
+}: {
+  to: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  badge?: string;
+  badgeColor?: "warning" | "primary";
+}) => (
   <Link
     to={to}
     className="group rounded-2xl bg-card border border-border p-6 hover:border-primary hover:shadow-soft transition-smooth"
   >
-    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-smooth">
-      {icon}
+    <div className="flex items-start justify-between mb-3">
+      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-smooth">
+        {icon}
+      </div>
+      {badge && (
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+          badgeColor === "warning"
+            ? "bg-warning/10 text-warning"
+            : "bg-green-100 text-green-700"
+        }`}>
+          {badge}
+        </span>
+      )}
     </div>
     <div className="font-display font-bold text-lg mb-1">{title}</div>
     <div className="text-sm text-muted-foreground">{desc}</div>

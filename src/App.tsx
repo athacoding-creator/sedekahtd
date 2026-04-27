@@ -11,6 +11,9 @@ import Donate from "./pages/Donate.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminCampaigns from "./pages/AdminCampaigns.tsx";
 import AdminDonations from "./pages/AdminDonations.tsx";
+import AdminHeroes from "./pages/AdminHeroes.tsx";
+import AdminQris from "./pages/AdminQris.tsx";
+import AdminStorage from "./pages/AdminStorage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/campaigns" element={<AdminCampaigns />} />
           <Route path="/admin/donations" element={<AdminDonations />} />
+          <Route path="/admin/heroes" element={<AdminHeroes />} />
+          <Route path="/admin/qris" element={<AdminQris />} />
+          <Route path="/admin/storage" element={<AdminStorage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
