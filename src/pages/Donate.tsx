@@ -1,0 +1,209 @@
+import { Layout } from "@/components/Layout";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Campaign } from "@/components/CampaignCard";
+import { formatRupiah } from "@/lib/format";
+import { toast } from "sonner";
+import { CheckCircle2, Loader2, Upload, Wallet, Building2, Smartphone } from "lucide-react";
+import { z } from "zod";
+
+const schema = z.object({
+  nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
+  nominal: z.number().int().positive("Nominal harus lebih dari 0").max(1_000_000_000),
+  metode: z.enum(["QRIS", "Transfer Bank", "E-wallet"]),
+});
+
+const nominalQuick = [25000, 50000, 100000, 250000, 500000, 1000000];
+
+const methods = [
+  { id: "QRIS", label: "QRIS", icon: Smartphone },
+  { id: "Transfer Bank", label: "Transfer Bank", icon: Building2 },
+  { id: "E-wallet", label: "E-wallet", icon: Wallet },
+] as const;
+
+const Donate = () => {
+  const { id } = useParams();
+  const nav = useNavigate();
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [nama, setNama] = useState("");
+  const [nominal, setNominal] = useState<string>("");
+  const [metode, setMetode] = useState<string>("QRIS");
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("campaigns").select("*").eq("id", id).maybeSingle()
+      .then(({ data }) => setCampaign(data as Campaign));
+  }, [id]);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { toast.error("Ukuran file maksimal 5MB"); return; }
+    setFile(f);
+  };
+
+  const submit = async () => {
+    const parse = schema.safeParse({ nama, nominal: Number(nominal), metode: metode as any });
+    if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
+    if (!file) { toast.error("Silakan upload bukti transfer"); return; }
+
+    setLoading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("bukti-transfer").upload(path, file);
+      if (upErr) throw upErr;
+
+      const { error: insErr } = await supabase.from("donations").insert({
+        campaign_id: id,
+        nama: parse.data.nama,
+        nominal: parse.data.nominal,
+        metode_pembayaran: parse.data.metode,
+        bukti_transfer: path,
+        status: "pending",
+      });
+      if (insErr) throw insErr;
+
+      setDone(true);
+    } catch (e: any) {
+      toast.error(e.message || "Gagal mengirim donasi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <Layout>
+        <div className="container py-20 max-w-md mx-auto text-center animate-scale-in">
+          <div className="h-20 w-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <CheckCircle2 className="h-10 w-10 text-primary" />
+          </div>
+          <h1 className="font-display text-3xl font-extrabold mb-3">Terima kasih!</h1>
+          <p className="text-muted-foreground mb-2">Donasi Anda telah kami terima.</p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning/10 text-warning border border-warning/20 text-sm font-semibold mb-8">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Menunggu verifikasi admin
+          </div>
+          <div className="flex gap-3 justify-center">
+            <button onClick={() => nav("/campaign")} className="px-6 py-3 rounded-full bg-secondary font-semibold hover:bg-secondary/80 transition-smooth">
+              Campaign lain
+            </button>
+            <button onClick={() => nav("/")} className="px-6 py-3 rounded-full gradient-hero text-primary-foreground font-semibold shadow-button">
+              Ke beranda
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="container py-10 max-w-2xl">
+        <h1 className="font-display text-3xl md:text-4xl font-extrabold mb-2">Form Donasi</h1>
+        {campaign && <p className="text-muted-foreground mb-8">Untuk: <span className="font-semibold text-foreground">{campaign.judul}</span></p>}
+
+        <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 md:p-8 space-y-6">
+          {/* Nama */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Nama Donatur</label>
+            <input
+              value={nama}
+              onChange={e => setNama(e.target.value)}
+              maxLength={80}
+              placeholder="Nama lengkap (atau Hamba Allah)"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+            />
+          </div>
+
+          {/* Nominal */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Nominal Donasi</label>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {nominalQuick.map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setNominal(String(n))}
+                  className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-smooth ${
+                    nominal === String(n) ? "bg-primary text-primary-foreground border-primary shadow-button" : "bg-background border-border hover:border-primary"
+                  }`}
+                >
+                  {formatRupiah(n).replace("Rp ", "")}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">Rp</span>
+              <input
+                type="number"
+                value={nominal}
+                onChange={e => setNominal(e.target.value)}
+                placeholder="Nominal lain"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+              />
+            </div>
+          </div>
+
+          {/* Metode */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Metode Pembayaran</label>
+            <div className="grid grid-cols-3 gap-2">
+              {methods.map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setMetode(m.id)}
+                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 text-xs font-semibold transition-smooth ${
+                    metode === m.id ? "bg-primary text-primary-foreground border-primary shadow-button" : "bg-background border-border hover:border-primary"
+                  }`}
+                >
+                  <m.icon className="h-5 w-5" />
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Upload */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Bukti Transfer</label>
+            <label className={`flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-smooth ${
+              file ? "border-primary bg-primary/5" : "border-border hover:border-primary hover:bg-secondary/40"
+            }`}>
+              <input type="file" accept="image/*,application/pdf" onChange={handleFile} className="hidden" />
+              {file ? (
+                <>
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                  <span className="text-sm font-semibold text-primary">{file.name}</span>
+                  <span className="text-xs text-muted-foreground">Klik untuk ganti</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-sm font-semibold">Pilih bukti transfer</span>
+                  <span className="text-xs text-muted-foreground">PNG, JPG, atau PDF — maks 5MB</span>
+                </>
+              )}
+            </label>
+          </div>
+
+          <button
+            onClick={submit}
+            disabled={loading}
+            className="w-full px-6 py-4 rounded-2xl gradient-hero text-primary-foreground font-bold shadow-button hover:shadow-glow transition-smooth flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Mengirim...</>) :
+              file ? "Kirim Donasi" : (<><Upload className="h-4 w-4" /> Upload Bukti Dulu</>)}
+          </button>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default Donate;
