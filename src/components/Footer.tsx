@@ -23,13 +23,14 @@ export const Footer = () => (
           </div>
           <div className="flex items-start justify-center gap-2 text-sm text-muted-foreground max-w-md mx-auto">
             <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>Jl. Kebaikan Blok B No. 12, Menteng, Jakarta Pusat, DKI Jakarta</span>
+            <span>Jalan Nitikan UH VI / 413 RT 41 RW 11<br />
+                Kel. Sorosutan Kec. Umbulharjo, Yogyakarta</span>
           </div>
         </div>
       </div>
     </div>
     <div className="bg-primary text-primary-foreground py-4 text-center text-xs">
-      Copyright © {new Date().getFullYear()} Teras Dakwah. All Rights Reserved
+     © 2014 Teras Dakwah. All Rights Reserved.
     </div>
   </footer>
 );
