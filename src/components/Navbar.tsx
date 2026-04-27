@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Heart, Menu, X } from "lucide-react";
+import { Heart, Menu, X, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -15,10 +15,10 @@ export const Navbar = () => {
   const loc = useLocation();
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/60">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/90 border-b border-border/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="h-9 w-9 rounded-xl gradient-hero shadow-button flex items-center justify-center group-hover:scale-110 transition-smooth">
+          <div className="h-9 w-9 rounded-xl gradient-banner shadow-blue flex items-center justify-center group-hover:scale-110 transition-smooth">
             <Heart className="h-4 w-4 text-primary-foreground fill-primary-foreground" />
           </div>
           <div className="leading-tight">
@@ -40,9 +40,10 @@ export const Navbar = () => {
               {i.label}
             </NavLink>
           ))}
-          <Link to="/campaign" className="ml-2 px-5 py-2 rounded-full gradient-hero text-primary-foreground text-sm font-semibold shadow-button hover:shadow-glow transition-smooth">
-            Donasi Sekarang
-          </Link>
+          <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer"
+             className="ml-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-blue hover:bg-primary-dark transition-smooth flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" /> Tanya Program
+          </a>
         </nav>
 
         <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg hover:bg-secondary transition-smooth">
@@ -66,9 +67,10 @@ export const Navbar = () => {
                 {i.label}
               </Link>
             ))}
-            <Link to="/campaign" onClick={() => setOpen(false)} className="mt-2 px-4 py-3 rounded-xl gradient-hero text-primary-foreground text-sm font-semibold text-center shadow-button">
-              Donasi Sekarang
-            </Link>
+            <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer"
+               className="mt-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold text-center shadow-blue flex items-center justify-center gap-2">
+              <MessageCircle className="h-4 w-4" /> Tanya Program
+            </a>
           </div>
         </div>
       )}
