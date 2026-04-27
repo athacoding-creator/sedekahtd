@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, Megaphone, HandHeart, LogOut, Home } from "lucide-react";
 import tdlogo from "@/assets/td-logo.png";
+import logoterasdakwah from "@/assets/td-logo-full.png";
 
 const Admin = () => {
   const nav = useNavigate();
@@ -146,7 +147,7 @@ const Admin = () => {
       <header className="bg-background border-b border-border sticky top-0 z-40">
         <div className="container max-w-6xl flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
-            <img src={tdlogo } alt="Teras Dakwah" className="h-9 w-auto" />
+            <img src={logoterasdakwah } alt="Teras Dakwah" className="h-9 w-auto" />
             <span className="font-display font-bold text-lg">{"\n"}</span>
           </div>
           <div className="flex items-center gap-2">
