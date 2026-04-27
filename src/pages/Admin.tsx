@@ -86,7 +86,7 @@ const Admin = () => {
             <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email" className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none" />
             <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none" />
             <div className="flex gap-2">
-              <button onClick={login} disabled={authLoading} className="flex-1 px-4 py-3 rounded-xl gradient-hero text-primary-foreground font-semibold shadow-button disabled:opacity-60">
+              <button onClick={login} disabled={authLoading} className="flex-1 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-button disabled:opacity-60">
                 {authLoading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Masuk"}
               </button>
               <button onClick={signup} disabled={authLoading} className="px-4 py-3 rounded-xl bg-secondary font-semibold hover:bg-secondary/80">Daftar</button>
@@ -160,7 +160,7 @@ const Admin = () => {
                           </button>
                         )}
                         {d.status !== "verified" && (
-                          <button onClick={() => verify(d.id)} className="px-3 py-1.5 rounded-lg gradient-hero text-primary-foreground text-xs font-semibold inline-flex items-center gap-1 shadow-button">
+                          <button onClick={() => verify(d.id)} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center gap-1 shadow-button">
                             <CheckCircle2 className="h-3.5 w-3.5" /> Verifikasi
                           </button>
                         )}

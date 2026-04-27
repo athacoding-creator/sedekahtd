@@ -92,7 +92,7 @@ const Donate = () => {
             <button onClick={() => nav("/campaign")} className="px-6 py-3 rounded-full bg-secondary font-semibold hover:bg-secondary/80 transition-smooth">
               Campaign lain
             </button>
-            <button onClick={() => nav("/")} className="px-6 py-3 rounded-full gradient-hero text-primary-foreground font-semibold shadow-button">
+            <button onClick={() => nav("/")} className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-button">
               Ke beranda
             </button>
           </div>
@@ -195,7 +195,7 @@ const Donate = () => {
           <button
             onClick={submit}
             disabled={loading}
-            className="w-full px-6 py-4 rounded-2xl gradient-hero text-primary-foreground font-bold shadow-button hover:shadow-glow transition-smooth flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold uppercase tracking-wide text-sm shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Mengirim...</>) :
               file ? "Kirim Donasi" : (<><Upload className="h-4 w-4" /> Upload Bukti Dulu</>)}
