@@ -61,7 +61,7 @@ const Admin = () => {
           <div className="text-center mt-12 mb-8">
             <img src={tdlogo} alt="Teras Dakwah" className="h-20 w-auto mx-auto mb-6" />
             <h1 className="font-display text-3xl font-extrabold mb-2">Login Admin</h1>
-            <p className="text-muted-foreground text-sm">Masuk untuk mengelola konten website</p>
+            <p className="text-muted-foreground text-sm">Masuk untuk mengelola Campaign</p>
           </div>
 
           <div className="bg-card border border-border/60 rounded-2xl shadow-soft p-6 space-y-5">
@@ -73,7 +73,7 @@ const Admin = () => {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   type="email"
-                  placeholder="admin@terasdakwah.com"
+                  placeholder="info@admin.com"
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
                 />
               </div>
@@ -111,7 +111,7 @@ const Admin = () => {
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
-            © {new Date().getFullYear()} Teras Dakwah. All Rights Reserved.
+            © 2014 Teras Dakwah. All Rights Reserved.
           </p>
         </div>
       </Layout>
