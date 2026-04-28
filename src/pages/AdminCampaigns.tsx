@@ -227,6 +227,9 @@ const AdminCampaigns = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        <Link to={`/admin/campaigns/${c.id}/analytics`} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-smooth" title="Lihat Analytics">
+                          <BarChart3 className="h-4 w-4" />
+                        </Link>
                         <button onClick={() => openEdit(c)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-smooth" title="Edit">
                           <Pencil className="h-4 w-4" />
                         </button>
