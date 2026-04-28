@@ -21,6 +21,16 @@ const CampaignDetail = () => {
         const pixel = (data as any).fb_pixel_id;
         if (pixel) loadFbPixel(pixel);
       });
+
+    // Real-time: update terkumpul & progress bar saat donasi diverifikasi
+    const channel = supabase
+      .channel(`campaign-detail-${id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "campaigns", filter: `id=eq.${id}` }, (payload) => {
+        setC(prev => prev ? { ...prev, terkumpul: (payload.new as any).terkumpul } : prev);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [id]);
 
   if (!c) return <Layout><div className="container py-20 text-center text-muted-foreground">Memuat...</div></Layout>;
