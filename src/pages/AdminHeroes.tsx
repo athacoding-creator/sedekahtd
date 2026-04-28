@@ -95,11 +95,11 @@ const AdminHeroes = () => {
       };
 
       if (editing) {
-        const { error } = await supabase.from("heroes").update(payload).eq("id", editing.id);
+        const { error } = await (supabase as any).from("heroes").update(payload).eq("id", editing.id);
         if (error) throw error;
         toast.success("Hero diperbarui");
       } else {
-        const { error } = await supabase.from("heroes").insert(payload);
+        const { error } = await (supabase as any).from("heroes").insert(payload);
         if (error) throw error;
         toast.success("Hero ditambahkan");
       }
@@ -119,13 +119,13 @@ const AdminHeroes = () => {
       const path = h.gambar_url.split("/heroes/").pop();
       if (path) await supabase.storage.from("heroes").remove([path]);
     }
-    const { error } = await supabase.from("heroes").delete().eq("id", h.id);
+    const { error } = await (supabase as any).from("heroes").delete().eq("id", h.id);
     if (error) toast.error(error.message);
     else { toast.success("Hero dihapus"); load(); }
   };
 
   const toggleAktif = async (h: Hero) => {
-    const { error } = await supabase.from("heroes").update({ aktif: !h.aktif }).eq("id", h.id);
+    const { error } = await (supabase as any).from("heroes").update({ aktif: !h.aktif }).eq("id", h.id);
     if (error) toast.error(error.message);
     else {
       toast.success(h.aktif ? "Hero disembunyikan" : "Hero ditampilkan");

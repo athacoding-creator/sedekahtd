@@ -14,10 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_visits: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          referrer: string | null
+          user_agent: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           created_at: string
           deskripsi: string
+          fb_pixel_id: string | null
           gambar_url: string | null
           id: string
           judul: string
@@ -30,6 +58,7 @@ export type Database = {
         Insert: {
           created_at?: string
           deskripsi: string
+          fb_pixel_id?: string | null
           gambar_url?: string | null
           id?: string
           judul: string
@@ -42,6 +71,7 @@ export type Database = {
         Update: {
           created_at?: string
           deskripsi?: string
+          fb_pixel_id?: string | null
           gambar_url?: string | null
           id?: string
           judul?: string

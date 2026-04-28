@@ -1,9 +1,10 @@
 import { AdminLayout } from "@/components/AdminLayout";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
-import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp, BarChart3 } from "lucide-react";
 
 type Campaign = {
   id: string;
@@ -14,6 +15,7 @@ type Campaign = {
   terkumpul: number;
   gambar_url: string | null;
   qris_id: string | null;
+  fb_pixel_id: string | null;
 };
 
 type Qris = {
@@ -23,7 +25,7 @@ type Qris = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "" };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "" };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -38,8 +40,8 @@ const AdminCampaigns = () => {
   const load = async () => {
     setLoading(true);
     const [campRes, qrisRes] = await Promise.all([
-      supabase.from("campaigns").select("*").order("created_at", { ascending: false }),
-      supabase.from("qris_list").select("id, nama, gambar_url, aktif").order("created_at"),
+      (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("qris_list").select("id, nama, gambar_url, aktif").order("created_at"),
     ]);
     setLoading(false);
     if (campRes.error) toast.error(campRes.error.message);
@@ -77,6 +79,7 @@ const AdminCampaigns = () => {
       target: c.target,
       gambar_url: c.gambar_url ?? "",
       qris_id: c.qris_id ?? "",
+      fb_pixel_id: c.fb_pixel_id ?? "",
     });
     setFile(null);
     setOpen(true);
@@ -108,14 +111,15 @@ const AdminCampaigns = () => {
         target: Number(form.target),
         gambar_url,
         qris_id: form.qris_id || null,
+        fb_pixel_id: form.fb_pixel_id.trim() || null,
       };
 
       if (editing) {
-        const { error } = await supabase.from("campaigns").update(payload).eq("id", editing.id);
+        const { error } = await (supabase as any).from("campaigns").update(payload).eq("id", editing.id);
         if (error) throw error;
         toast.success("Campaign diperbarui");
       } else {
-        const { error } = await supabase.from("campaigns").insert(payload);
+        const { error } = await (supabase as any).from("campaigns").insert(payload);
         if (error) throw error;
         toast.success("Campaign ditambahkan");
       }
@@ -130,7 +134,7 @@ const AdminCampaigns = () => {
 
   const remove = async (c: Campaign) => {
     if (!confirm(`Hapus campaign "${c.judul}"?`)) return;
-    const { error } = await supabase.from("campaigns").delete().eq("id", c.id);
+    const { error } = await (supabase as any).from("campaigns").delete().eq("id", c.id);
     if (error) toast.error(error.message);
     else { toast.success("Campaign dihapus"); load(); }
   };
@@ -223,6 +227,9 @@ const AdminCampaigns = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        <Link to={`/admin/campaigns/${c.id}/analytics`} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-smooth" title="Lihat Analytics">
+                          <BarChart3 className="h-4 w-4" />
+                        </Link>
                         <button onClick={() => openEdit(c)} className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-smooth" title="Edit">
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -357,6 +364,16 @@ const AdminCampaigns = () => {
                   </label>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">PNG/JPG, maks 5MB</p>
+              </Field>
+
+              <Field label="Facebook Pixel ID (opsional)">
+                <input
+                  value={form.fb_pixel_id}
+                  onChange={e => setForm({ ...form, fb_pixel_id: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none font-mono text-sm"
+                  placeholder="123456789012345"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Pixel khusus untuk campaign ini. Kosongkan jika tidak digunakan.</p>
               </Field>
             </div>
 

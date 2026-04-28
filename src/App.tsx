@@ -10,6 +10,7 @@ import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Donate from "./pages/Donate.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminCampaigns from "./pages/AdminCampaigns.tsx";
+import AdminCampaignAnalytics from "./pages/AdminCampaignAnalytics.tsx";
 import AdminDonations from "./pages/AdminDonations.tsx";
 import AdminHeroes from "./pages/AdminHeroes.tsx";
 import AdminQris from "./pages/AdminQris.tsx";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/donasi/:id" element={<Donate />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/campaigns" element={<AdminCampaigns />} />
+          <Route path="/admin/campaigns/:id/analytics" element={<AdminCampaignAnalytics />} />
           <Route path="/admin/donations" element={<AdminDonations />} />
           <Route path="/admin/heroes" element={<AdminHeroes />} />
           <Route path="/admin/qris" element={<AdminQris />} />

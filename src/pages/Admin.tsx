@@ -32,11 +32,11 @@ const Admin = () => {
   useEffect(() => {
     if (!isAdmin) return;
     Promise.all([
-      supabase.from("campaigns").select("id", { count: "exact", head: true }),
+      (supabase as any).from("campaigns").select("id", { count: "exact", head: true }),
       supabase.from("donations").select("id", { count: "exact", head: true }),
       supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "pending"),
-      supabase.from("heroes").select("id", { count: "exact", head: true }),
-      supabase.from("qris_list").select("id", { count: "exact", head: true }),
+      (supabase as any).from("heroes").select("id", { count: "exact", head: true }),
+      (supabase as any).from("qris_list").select("id", { count: "exact", head: true }),
     ]).then(([c, d, p, h, q]) => {
       setStats({
         campaigns: c.count ?? 0,
