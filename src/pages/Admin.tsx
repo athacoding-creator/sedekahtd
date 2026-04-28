@@ -194,7 +194,7 @@ const Admin = () => {
             to="/admin/campaigns"
             icon={<Megaphone className="h-6 w-6 text-primary" />}
             title="Campaign"
-            desc="Kelola campaign donasi: tambah, edit, hapus, pilih QRIS"
+            desc="Kelola campaign donasi: tambah, edit, hapus, pilih Pembayaran"
             badge="Real-time"
           />
           <MenuCard
