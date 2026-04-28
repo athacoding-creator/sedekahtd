@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
-import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp, BarChart3 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp, BarChart3, Star } from "lucide-react";
 
 type Campaign = {
   id: string;
@@ -16,6 +16,7 @@ type Campaign = {
   gambar_url: string | null;
   qris_id: string | null;
   fb_pixel_id: string | null;
+  is_pilihan: boolean;
 };
 
 type Qris = {
@@ -25,7 +26,7 @@ type Qris = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "" };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "", is_pilihan: false };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -80,6 +81,7 @@ const AdminCampaigns = () => {
       gambar_url: c.gambar_url ?? "",
       qris_id: c.qris_id ?? "",
       fb_pixel_id: c.fb_pixel_id ?? "",
+      is_pilihan: c.is_pilihan ?? false,
     });
     setFile(null);
     setOpen(true);
@@ -112,6 +114,7 @@ const AdminCampaigns = () => {
         gambar_url,
         qris_id: form.qris_id || null,
         fb_pixel_id: form.fb_pixel_id.trim() || null,
+        is_pilihan: form.is_pilihan,
       };
 
       if (editing) {
@@ -169,6 +172,7 @@ const AdminCampaigns = () => {
               <tr>
                 <th className="px-4 py-3 font-bold">Gambar</th>
                 <th className="px-4 py-3 font-bold">Judul</th>
+                <th className="px-4 py-3 font-bold">Pilihan</th>
                 <th className="px-4 py-3 font-bold">QRIS</th>
                 <th className="px-4 py-3 font-bold">Target</th>
                 <th className="px-4 py-3 font-bold">Terkumpul</th>
@@ -178,12 +182,12 @@ const AdminCampaigns = () => {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                 </td></tr>
               )}
               {!loading && items.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
               )}
               {items.map(c => {
                 const qris = qrisList.find(q => q.id === c.qris_id);
@@ -200,6 +204,21 @@ const AdminCampaigns = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 font-semibold max-w-xs truncate">{c.judul}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={async () => {
+                          const { error } = await (supabase as any).from("campaigns").update({ is_pilihan: !c.is_pilihan }).eq("id", c.id);
+                          if (error) toast.error(error.message);
+                          else { load(); toast.success(c.is_pilihan ? "Dihapus dari Program Pilihan" : "Ditambahkan ke Program Pilihan"); }
+                        }}
+                        title={c.is_pilihan ? "Hapus dari Program Pilihan" : "Jadikan Program Pilihan"}
+                        className={`p-1.5 rounded-lg transition-smooth ${
+                          c.is_pilihan ? "text-yellow-500 bg-yellow-50 hover:bg-yellow-100" : "text-slate-300 hover:text-yellow-400 hover:bg-yellow-50"
+                        }`}
+                      >
+                        <Star className={`h-4 w-4 ${c.is_pilihan ? "fill-yellow-400" : ""}`} />
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       {qris ? (
                         <div className="flex items-center gap-1.5">
@@ -379,6 +398,26 @@ const AdminCampaigns = () => {
                 />
                 <p className="text-xs text-muted-foreground mt-1">Pixel khusus untuk campaign ini. Kosongkan jika tidak digunakan.</p>
               </Field>
+
+              {/* Toggle Program Pilihan */}
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, is_pilihan: !form.is_pilihan })}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-smooth ${
+                  form.is_pilihan
+                    ? "border-yellow-400 bg-yellow-50 text-yellow-700"
+                    : "border-border bg-background text-muted-foreground hover:border-yellow-300"
+                }`}
+              >
+                <Star className={`h-5 w-5 flex-shrink-0 ${ form.is_pilihan ? "fill-yellow-400 text-yellow-400" : "" }`} />
+                <div className="text-left">
+                  <p className="font-bold text-sm">{form.is_pilihan ? "Program Pilihan (Aktif)" : "Jadikan Program Pilihan"}</p>
+                  <p className="text-xs opacity-70">Tampil di section Program Pilihan halaman utama</p>
+                </div>
+                <div className={`ml-auto w-10 h-5 rounded-full transition-smooth flex items-center px-0.5 ${ form.is_pilihan ? "bg-yellow-400" : "bg-muted" }`}>
+                  <div className={`w-4 h-4 rounded-full bg-white shadow transition-all ${ form.is_pilihan ? "translate-x-5" : "translate-x-0" }`} />
+                </div>
+              </button>
             </div>
 
             <div className="flex gap-3 p-5 border-t border-border sticky bottom-0 bg-card">

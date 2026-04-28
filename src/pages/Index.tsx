@@ -100,7 +100,7 @@ const Index = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const programPilihan = campaigns;
+  const programPilihan = campaigns.filter(c => c.is_pilihan);
   const filteredCampaigns = campaigns.filter(c =>
     (selectedKat === "Semua" || c.kategori === selectedKat) &&
     c.judul.toLowerCase().includes(searchQ.toLowerCase())
@@ -258,6 +258,11 @@ const Index = () => {
             </button>
 
             {/* Scroller */}
+            {programPilihan.length === 0 ? (
+              <div className="text-center py-10 text-sm text-slate-400 bg-white rounded-2xl border border-slate-100">
+                Belum ada program pilihan. Tandai campaign di admin panel.
+              </div>
+            ) : (
             <div
               ref={pilihanRef}
               className="flex gap-3.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-3 -mx-4 px-4 scroll-smooth"
@@ -295,6 +300,7 @@ const Index = () => {
                 </Link>
               ))}
             </div>
+            )}
           </div>
         </div>
       </section>
