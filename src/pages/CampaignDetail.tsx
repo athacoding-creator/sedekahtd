@@ -13,7 +13,7 @@ const CampaignDetail = () => {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from("campaigns").select("*").eq("id", id).maybeSingle()
+    (supabase as any).from("campaigns").select("*").eq("id", id).maybeSingle()
       .then(({ data }) => {
         if (!data) return;
         setC(data as any);

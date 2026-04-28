@@ -30,7 +30,7 @@ const AdminDonations = () => {
     setLoading(true);
     const [dRes, cRes] = await Promise.all([
       supabase.from("donations").select("*").order("created_at", { ascending: false }),
-      supabase.from("campaigns").select("id, judul"),
+      (supabase as any).from("campaigns").select("id, judul"),
     ]);
     setLoading(false);
     if (dRes.error) toast.error(dRes.error.message);

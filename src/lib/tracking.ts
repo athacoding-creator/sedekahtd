@@ -16,7 +16,7 @@ export const trackCampaignVisit = async (campaignId: string) => {
   if (sessionStorage.getItem(flag)) return;
   sessionStorage.setItem(flag, "1");
   try {
-    await supabase.from("campaign_visits").insert({
+    await (supabase as any).from("campaign_visits").insert({
       campaign_id: campaignId,
       visitor_id: getVisitorId(),
       user_agent: navigator.userAgent,

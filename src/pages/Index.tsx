@@ -63,7 +63,7 @@ const Index = () => {
       });
 
     // Load campaigns with real-time subscription
-    supabase.from("campaigns").select("*").order("created_at", { ascending: false })
+    (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false })
       .then(({ data }) => {
         const list = (data as Campaign[]) ?? [];
         setCampaigns(list);

@@ -10,7 +10,7 @@ const CampaignList = () => {
   const [cat, setCat] = useState<string>("Semua");
 
   useEffect(() => {
-    supabase.from("campaigns").select("*").order("created_at", { ascending: false })
+    (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false })
       .then(({ data }) => setCampaigns((data as Campaign[]) ?? []));
   }, []);
 
