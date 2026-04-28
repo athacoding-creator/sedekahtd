@@ -82,9 +82,9 @@ const Index = () => {
         setStats(s => ({ ...s, jumlah: list.length }));
       });
 
-    // Real-time: update campaign terkumpul when verified
+    // Real-time: update campaign terkumpul & stats jumlah saat donasi diverifikasi
     const channel = supabase
-      .channel("index-campaigns-realtime")
+      .channel("index-realtime")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "campaigns" }, (payload) => {
         setCampaigns(prev => {
           const updated = prev.map(c =>
@@ -94,6 +94,24 @@ const Index = () => {
           setStats(s => ({ ...s, total }));
           return updated;
         });
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "donations" }, () => {
+        // Refresh jumlah donasi verified saat ada perubahan status
+        supabase.from("public_donations").select("*").limit(50)
+          .then(({ data }) => {
+            const list = (data as PublicDonation[]) ?? [];
+            setDonations(list);
+            setStats(s => ({ ...s, jumlah: list.length }));
+          });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "donations" }, () => {
+        // Refresh saat ada donasi baru masuk
+        supabase.from("public_donations").select("*").limit(50)
+          .then(({ data }) => {
+            const list = (data as PublicDonation[]) ?? [];
+            setDonations(list);
+            setStats(s => ({ ...s, jumlah: list.length }));
+          });
       })
       .subscribe();
 
