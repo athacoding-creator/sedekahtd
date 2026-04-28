@@ -29,8 +29,8 @@ export const trackCampaignVisit = async (campaignId: string) => {
 
 declare global {
   interface Window {
-    fbq?: any;
-    _fbq?: any;
+    fbq: any;
+    _fbq: any;
   }
 }
 

@@ -9,6 +9,7 @@ import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode } from "lucide-r
 import { z } from "zod";
 import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
+import { loadFbPixel, fbTrack } from "@/lib/tracking";
 
 type QrisData = {
   id: string;
@@ -20,6 +21,7 @@ type QrisData = {
 type CampaignWithQris = Campaign & {
   qris_id: string | null;
   qris_list: QrisData | null;
+  fb_pixel_id?: string | null;
 };
 
 const schema = z.object({
@@ -47,7 +49,11 @@ const Donate = () => {
       .select("*, qris_list(id, nama, gambar_url, deskripsi)")
       .eq("id", id)
       .maybeSingle()
-      .then(({ data }) => setCampaign(data as CampaignWithQris));
+      .then(({ data }) => {
+        const c = data as CampaignWithQris;
+        setCampaign(c);
+        if (c?.fb_pixel_id) loadFbPixel(c.fb_pixel_id);
+      });
   }, [id]);
 
   const qris = campaign?.qris_list ?? null;
@@ -100,6 +106,12 @@ const Donate = () => {
         campaign: campaign?.judul,
       });
       window.open(waUrl, "_blank");
+
+      fbTrack("Purchase", {
+        value: parse.data.nominal,
+        currency: "IDR",
+        content_name: campaign?.judul,
+      });
 
       setDone(true);
     } catch (e: any) {

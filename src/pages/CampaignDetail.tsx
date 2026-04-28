@@ -5,15 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { ArrowLeft, Calendar, Heart, Share2, Target } from "lucide-react";
+import { trackCampaignVisit, loadFbPixel, fbTrack } from "@/lib/tracking";
 
 const CampaignDetail = () => {
   const { id } = useParams();
-  const [c, setC] = useState<Campaign | null>(null);
+  const [c, setC] = useState<(Campaign & { fb_pixel_id?: string | null }) | null>(null);
 
   useEffect(() => {
     if (!id) return;
     supabase.from("campaigns").select("*").eq("id", id).maybeSingle()
-      .then(({ data }) => setC(data as Campaign));
+      .then(({ data }) => {
+        if (!data) return;
+        setC(data as any);
+        trackCampaignVisit(id);
+        const pixel = (data as any).fb_pixel_id;
+        if (pixel) loadFbPixel(pixel);
+      });
   }, [id]);
 
   if (!c) return <Layout><div className="container py-20 text-center text-muted-foreground">Memuat...</div></Layout>;
@@ -63,7 +70,7 @@ const CampaignDetail = () => {
               </div>
             </div>
 
-            <Link to={`/donasi/${c.id}`} className="w-full text-center px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm">
+            <Link to={`/donasi/${c.id}`} onClick={() => fbTrack("InitiateCheckout", { content_name: c.judul })} className="w-full text-center px-6 py-4 rounded-2xl bg-accent text-accent-foreground font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm">
               <Heart className="h-4 w-4 fill-current" /> Sedekah Sekarang
             </Link>
 
