@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus } from "lucide-react";
 import { z } from "zod";
 import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
@@ -22,6 +22,9 @@ type CampaignWithQris = Campaign & {
   qris_id: string | null;
   qris_list: QrisData | null;
   fb_pixel_id?: string | null;
+  jenis_campaign: string;
+  nama_paket: string | null;
+  harga_paket: number | null;
 };
 
 const schema = z.object({
@@ -38,23 +41,33 @@ const Donate = () => {
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [nominal, setNominal] = useState<string>("");
+  const [jumlahPaket, setJumlahPaket] = useState(1);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    supabase
+    (supabase as any)
       .from("campaigns")
       .select("*, qris_list(id, nama, gambar_url, deskripsi)")
       .eq("id", id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         const c = data as CampaignWithQris;
         setCampaign(c);
         if (c?.fb_pixel_id) loadFbPixel(c.fb_pixel_id);
+        // Jika paket, set nominal otomatis
+        if (c?.jenis_campaign === "paket" && c.harga_paket) {
+          setNominal(String(c.harga_paket));
+        }
       });
   }, [id]);
+
+  const isPaket = campaign?.jenis_campaign === "paket";
+  const hargaPaket = campaign?.harga_paket ?? 0;
+  const nominalPaket = isPaket ? jumlahPaket * hargaPaket : 0;
+  const nominalFinal = isPaket ? nominalPaket : Number(nominal);
 
   const qris = campaign?.qris_list ?? null;
 
@@ -66,20 +79,20 @@ const Donate = () => {
   };
 
   const goPay = () => {
-    const parse = schema.safeParse({ nama, nominal: Number(nominal) });
+    const parse = schema.safeParse({ nama, nominal: nominalFinal });
     if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
     setStep("pay");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const copyNominal = async () => {
-    await navigator.clipboard.writeText(String(nominal));
+    await navigator.clipboard.writeText(String(nominalFinal));
     toast.success("Nominal disalin");
   };
 
   const submit = async () => {
     if (!file) { toast.error("Silakan upload bukti transfer"); return; }
-    const parse = schema.safeParse({ nama, nominal: Number(nominal) });
+    const parse = schema.safeParse({ nama, nominal: nominalFinal });
     if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
 
     setLoading(true);
@@ -99,7 +112,6 @@ const Donate = () => {
       });
       if (insErr) throw insErr;
 
-      // Buka WhatsApp untuk konfirmasi ke admin
       const waUrl = buildWaConfirmUrl({
         nama: parse.data.nama,
         nominal: parse.data.nominal,
@@ -159,6 +171,12 @@ const Donate = () => {
             <p className="text-sm text-muted-foreground">Terima kasih <span className="font-semibold text-foreground">{nama}</span></p>
             <p className="text-sm text-muted-foreground">atas donasi yang akan Anda berikan untuk:</p>
             {campaign && <p className="font-display font-bold text-lg mt-2">{campaign.judul}</p>}
+            {isPaket && (
+              <div className="inline-flex items-center gap-2 mt-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                <Package className="h-4 w-4" />
+                {jumlahPaket} paket {campaign?.nama_paket}
+              </div>
+            )}
           </div>
 
           <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-5">
@@ -166,25 +184,13 @@ const Donate = () => {
             <div className="bg-white rounded-2xl p-4 border border-border/60">
               {qris ? (
                 <div className="text-center">
-                  <img
-                    src={qris.gambar_url}
-                    alt={qris.nama}
-                    className="w-full max-w-xs mx-auto"
-                  />
+                  <img src={qris.gambar_url} alt={qris.nama} className="w-full max-w-xs mx-auto" />
                   <p className="text-sm font-semibold mt-2 text-foreground">{qris.nama}</p>
-                  {qris.deskripsi && (
-                    <p className="text-xs text-muted-foreground mt-1">{qris.deskripsi}</p>
-                  )}
+                  {qris.deskripsi && <p className="text-xs text-muted-foreground mt-1">{qris.deskripsi}</p>}
                 </div>
               ) : (
                 <div className="text-center">
-                  <img
-                    src={qrisPlaceholder}
-                    alt="QRIS Yayasan Teras Dakwah"
-                    className="w-full max-w-xs mx-auto"
-                    width={512}
-                    height={640}
-                  />
+                  <img src={qrisPlaceholder} alt="QRIS Yayasan Teras Dakwah" className="w-full max-w-xs mx-auto" width={512} height={640} />
                   <p className="text-sm font-semibold mt-2 text-foreground">QRIS — Yayasan Teras Dakwah</p>
                 </div>
               )}
@@ -197,17 +203,13 @@ const Donate = () => {
               </div>
             )}
 
-            {qris && (
-              <p className="text-center text-xs text-muted-foreground">
-                Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
-              </p>
-            )}
-
             {/* Nominal */}
             <div className="rounded-2xl border border-border bg-background p-4 flex items-center justify-between">
               <div>
-                <div className="text-xs text-muted-foreground mb-1">Nominal donasi</div>
-                <div className="font-display font-extrabold text-2xl text-accent">{formatRupiah(Number(nominal))}</div>
+                <div className="text-xs text-muted-foreground mb-1">
+                  {isPaket ? `${jumlahPaket} paket × ${formatRupiah(hargaPaket)}` : "Nominal donasi"}
+                </div>
+                <div className="font-display font-extrabold text-2xl text-accent">{formatRupiah(nominalFinal)}</div>
               </div>
               <button onClick={copyNominal} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-secondary text-xs font-semibold hover:bg-secondary/80 transition-smooth">
                 <Copy className="h-3.5 w-3.5" /> Salin
@@ -270,45 +272,87 @@ const Donate = () => {
             />
           </div>
 
-          {/* Nominal */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Nominal Donasi</label>
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              {nominalQuick.map(n => (
+          {/* ===== JENIS PAKET ===== */}
+          {isPaket ? (
+            <div>
+              <label className="block text-sm font-semibold mb-3">Jumlah Paket</label>
+              {/* Info paket */}
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Package className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">{campaign?.nama_paket ?? "Paket Donasi"}</p>
+                  <p className="text-xs text-muted-foreground">{formatRupiah(hargaPaket)} per paket</p>
+                </div>
+              </div>
+
+              {/* Counter paket */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background border border-border">
                 <button
-                  key={n}
                   type="button"
-                  onClick={() => setNominal(String(n))}
-                  className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-smooth ${
-                    nominal === String(n) ? "bg-primary text-primary-foreground border-primary shadow-button" : "bg-background border-border hover:border-primary"
-                  }`}
+                  onClick={() => setJumlahPaket(p => Math.max(1, p - 1))}
+                  className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-smooth disabled:opacity-40"
+                  disabled={jumlahPaket <= 1}
                 >
-                  {formatRupiah(n).replace("Rp ", "")}
+                  <Minus className="h-4 w-4" />
                 </button>
-              ))}
+                <div className="text-center">
+                  <div className="font-display font-extrabold text-3xl">{jumlahPaket}</div>
+                  <div className="text-xs text-muted-foreground">paket</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setJumlahPaket(p => p + 1)}
+                  className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-smooth"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Total */}
+              <div className="mt-3 p-4 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-between">
+                <span className="text-sm font-semibold text-muted-foreground">Total donasi</span>
+                <span className="font-display font-extrabold text-xl text-accent">{formatRupiah(nominalPaket)}</span>
+              </div>
             </div>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">Rp</span>
-              <input
-                type="number"
-                value={nominal}
-                onChange={e => setNominal(e.target.value)}
-                placeholder="Nominal lain"
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
-              />
+          ) : (
+            /* ===== JENIS UANG ===== */
+            <div>
+              <label className="block text-sm font-semibold mb-2">Nominal Donasi</label>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {nominalQuick.map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setNominal(String(n))}
+                    className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-smooth ${
+                      nominal === String(n) ? "bg-primary text-primary-foreground border-primary shadow-button" : "bg-background border-border hover:border-primary"
+                    }`}
+                  >
+                    {formatRupiah(n).replace("Rp ", "")}
+                  </button>
+                ))}
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">Rp</span>
+                <input
+                  type="number"
+                  value={nominal}
+                  onChange={e => setNominal(e.target.value)}
+                  placeholder="Nominal lain"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Metode pembayaran */}
           <div className="rounded-xl border border-border bg-background p-4">
             <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
             {qris ? (
               <div className="flex items-center gap-3">
-                <img
-                  src={qris.gambar_url}
-                  alt={qris.nama}
-                  className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5"
-                />
+                <img src={qris.gambar_url} alt={qris.nama} className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5" />
                 <div>
                   <div className="font-semibold text-sm">{qris.nama}</div>
                   {qris.deskripsi && <div className="text-xs text-muted-foreground">{qris.deskripsi}</div>}

@@ -17,6 +17,9 @@ type Campaign = {
   qris_id: string | null;
   fb_pixel_id: string | null;
   is_pilihan: boolean;
+  jenis_campaign: string;
+  nama_paket: string | null;
+  harga_paket: number | null;
 };
 
 type Qris = {
@@ -26,7 +29,7 @@ type Qris = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "", is_pilihan: false };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -82,6 +85,9 @@ const AdminCampaigns = () => {
       qris_id: c.qris_id ?? "",
       fb_pixel_id: c.fb_pixel_id ?? "",
       is_pilihan: c.is_pilihan ?? false,
+      jenis_campaign: c.jenis_campaign ?? "uang",
+      nama_paket: c.nama_paket ?? "",
+      harga_paket: c.harga_paket ?? 0,
     });
     setFile(null);
     setOpen(true);
@@ -115,6 +121,9 @@ const AdminCampaigns = () => {
         qris_id: form.qris_id || null,
         fb_pixel_id: form.fb_pixel_id.trim() || null,
         is_pilihan: form.is_pilihan,
+        jenis_campaign: form.jenis_campaign,
+        nama_paket: form.jenis_campaign === "paket" ? (form.nama_paket.trim() || null) : null,
+        harga_paket: form.jenis_campaign === "paket" ? (Number(form.harga_paket) || null) : null,
       };
 
       if (editing) {
@@ -322,6 +331,62 @@ const AdminCampaigns = () => {
                   />
                 </Field>
               </div>
+
+              {/* Jenis Campaign */}
+              <Field label="Jenis Campaign">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, jenis_campaign: "uang" })}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-4 rounded-xl border-2 transition-smooth ${
+                      form.jenis_campaign === "uang"
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="text-xl">💵</span>
+                    <span className="font-bold text-sm">Donasi Uang</span>
+                    <span className="text-[10px] opacity-70">Nominal bebas</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, jenis_campaign: "paket" })}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-4 rounded-xl border-2 transition-smooth ${
+                      form.jenis_campaign === "paket"
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="text-xl">📦</span>
+                    <span className="font-bold text-sm">Donasi Paket</span>
+                    <span className="text-[10px] opacity-70">Per paket (qty)</span>
+                  </button>
+                </div>
+              </Field>
+
+              {/* Field paket — hanya muncul jika jenis = paket */}
+              {form.jenis_campaign === "paket" && (
+                <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                  <Field label="Nama Paket">
+                    <input
+                      value={form.nama_paket}
+                      onChange={e => setForm({ ...form, nama_paket: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                      placeholder="cth: Sembako 5kg"
+                    />
+                  </Field>
+                  <Field label="Harga per Paket (Rp)">
+                    <input
+                      type="number"
+                      value={form.harga_paket || ""}
+                      onChange={e => setForm({ ...form, harga_paket: Number(e.target.value) })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                      placeholder="50000"
+                    />
+                  </Field>
+                  <p className="col-span-2 text-xs text-primary/70">💡 Donatur akan memilih jumlah paket, nominal otomatis = jumlah × harga paket</p>
+                </div>
+              )}
 
               {/* QRIS Selector */}
               <Field label="QRIS Pembayaran">
