@@ -365,6 +365,16 @@ const AdminCampaigns = () => {
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">PNG/JPG, maks 5MB</p>
               </Field>
+
+              <Field label="Facebook Pixel ID (opsional)">
+                <input
+                  value={form.fb_pixel_id}
+                  onChange={e => setForm({ ...form, fb_pixel_id: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none font-mono text-sm"
+                  placeholder="123456789012345"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Pixel khusus untuk campaign ini. Kosongkan jika tidak digunakan.</p>
+              </Field>
             </div>
 
             <div className="flex gap-3 p-5 border-t border-border sticky bottom-0 bg-card">
