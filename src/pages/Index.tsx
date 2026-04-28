@@ -5,8 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRupiah } from "@/lib/format";
 import bannerHero from "@/assets/banner-hero.jpg";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import CountUp from "react-countup";
+
+const KATEGORI = ["Semua", "Sosial", "Kemanusiaan", "Pembangunan"];
 
 type PublicDonation = {
   id: string;
@@ -40,6 +42,8 @@ const Index = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [showAllDonors, setShowAllDonors] = useState(false);
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+  const [selectedKat, setSelectedKat] = useState("Semua");
 
   useEffect(() => {
     // Load hero slides from database
@@ -97,7 +101,11 @@ const Index = () => {
   }, []);
 
   const programPilihan = campaigns;
-  const programLainnya = showAllCampaigns ? campaigns : campaigns.slice(0, 5);
+  const filteredCampaigns = campaigns.filter(c =>
+    (selectedKat === "Semua" || c.kategori === selectedKat) &&
+    c.judul.toLowerCase().includes(searchQ.toLowerCase())
+  );
+  const programLainnya = showAllCampaigns ? filteredCampaigns : filteredCampaigns.slice(0, 5);
   const visibleDonors = showAllDonors ? donations : donations.slice(0, 5);
 
   // Hero carousel
@@ -294,14 +302,47 @@ const Index = () => {
       {/* PROGRAM TERAS DAKWAH */}
       <section className="py-10 bg-gradient-to-b from-slate-50 to-sky-50/60 border-y border-slate-100">
         <div className="container max-w-3xl px-4">
-          <div className="text-center mb-6 animate-fade-in-up">
+          <div className="text-center mb-5 animate-fade-in-up">
             <h2 className="font-display text-2xl font-bold mb-1.5 text-slate-800">Program Teras Dakwah</h2>
             <p className="text-sm text-slate-500">Recharge iman dengan program-program Teras Dakwah</p>
           </div>
-          <div className="space-y-3.5">
-            {programLainnya.map((c, i) => <CampaignCard key={c.id} c={c} index={i} />)}
+
+          {/* Search bar */}
+          <div className="relative mb-3">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              value={searchQ}
+              onChange={e => { setSearchQ(e.target.value); setShowAllCampaigns(false); }}
+              placeholder="Cari campaign..."
+              className="w-full pl-11 pr-4 py-3 rounded-full bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm shadow-soft transition-smooth"
+            />
           </div>
-          {!showAllCampaigns && campaigns.length > 5 && (
+
+          {/* Filter kategori */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-5">
+            {KATEGORI.map(k => (
+              <button
+                key={k}
+                onClick={() => { setSelectedKat(k); setShowAllCampaigns(false); }}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-smooth border ${
+                  selectedKat === k
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-primary"
+                }`}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3.5">
+            {programLainnya.length === 0 ? (
+              <div className="text-center py-12 text-sm text-slate-400 bg-white rounded-2xl border border-slate-100">Tidak ada campaign ditemukan.</div>
+            ) : (
+              programLainnya.map((c, i) => <CampaignCard key={c.id} c={c} index={i} />)
+            )}
+          </div>
+          {!showAllCampaigns && filteredCampaigns.length > 5 && (
             <div className="text-center mt-8">
               <button
                 onClick={() => setShowAllCampaigns(true)}
