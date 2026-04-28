@@ -282,12 +282,16 @@ const AdminCampaigns = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Kategori">
-                  <input
+                  <select
                     value={form.kategori}
                     onChange={e => setForm({ ...form, kategori: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none"
-                    placeholder="Wakaf, Yatim, dll"
-                  />
+                  >
+                    <option value="">— Pilih Kategori —</option>
+                    <option value="Sosial">Sosial</option>
+                    <option value="Kemanusiaan">Kemanusiaan</option>
+                    <option value="Pembangunan">Pembangunan</option>
+                  </select>
                 </Field>
                 <Field label="Target Donasi (Rp) *">
                   <input
