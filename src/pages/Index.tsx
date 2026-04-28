@@ -200,25 +200,25 @@ const Index = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="mt-4 bg-[#1a6b3c] rounded-2xl shadow-card overflow-hidden animate-fade-in-up">
-            <div className="flex flex-row divide-x divide-white/20">
+          <div className="mt-4 bg-white rounded-2xl shadow-card border border-slate-100 overflow-hidden animate-fade-in-up">
+            <div className="flex flex-row">
               <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
-                <span className="font-display font-bold text-xl text-white tracking-tight leading-tight">
+                <span className="text-[11px] text-slate-500 font-medium text-center leading-tight">Total Donasi</span>
+                <span className="font-display font-bold text-lg text-slate-800 tracking-tight leading-tight mt-1">
                   Rp <CountUp end={stats.total} duration={2} separator="." useEasing />
                 </span>
-                <span className="text-[11px] text-white/80 font-medium mt-1 text-center leading-tight">Total Donasi</span>
               </div>
               <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
-                <span className="font-display font-bold text-xl text-white tracking-tight leading-tight">
+                <span className="text-[11px] text-slate-500 font-medium text-center leading-tight">Jumlah Donasi</span>
+                <span className="font-display font-bold text-lg text-slate-800 tracking-tight leading-tight mt-1">
                   <CountUp end={stats.jumlah} duration={2} separator="." useEasing />
                 </span>
-                <span className="text-[11px] text-white/80 font-medium mt-1 text-center leading-tight">Jumlah Donasi</span>
               </div>
               <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
-                <span className="font-display font-bold text-xl text-white tracking-tight leading-tight">
+                <span className="text-[11px] text-slate-500 font-medium text-center leading-tight">Aktif Program</span>
+                <span className="font-display font-bold text-lg text-slate-800 tracking-tight leading-tight mt-1">
                   <CountUp end={stats.aktif} duration={2} useEasing />
                 </span>
-                <span className="text-[11px] text-white/80 font-medium mt-1 text-center leading-tight">Aktif Program</span>
               </div>
             </div>
           </div>
