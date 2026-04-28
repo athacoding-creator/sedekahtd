@@ -214,7 +214,7 @@ const Admin = () => {
           <MenuCard
             to="/admin/qris"
             icon={<QrCode className="h-6 w-6 text-primary" />}
-            title="Kelola QRIS"
+            title="Kelola Pembayaran"
             desc="Tambah dan kelola data QRIS untuk setiap campaign"
           />
           <MenuCard
