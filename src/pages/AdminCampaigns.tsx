@@ -1,9 +1,10 @@
 import { AdminLayout } from "@/components/AdminLayout";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
-import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp, BarChart3 } from "lucide-react";
 
 type Campaign = {
   id: string;
@@ -14,6 +15,7 @@ type Campaign = {
   terkumpul: number;
   gambar_url: string | null;
   qris_id: string | null;
+  fb_pixel_id: string | null;
 };
 
 type Qris = {
@@ -23,7 +25,7 @@ type Qris = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "" };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "" };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -77,6 +79,7 @@ const AdminCampaigns = () => {
       target: c.target,
       gambar_url: c.gambar_url ?? "",
       qris_id: c.qris_id ?? "",
+      fb_pixel_id: c.fb_pixel_id ?? "",
     });
     setFile(null);
     setOpen(true);
@@ -108,6 +111,7 @@ const AdminCampaigns = () => {
         target: Number(form.target),
         gambar_url,
         qris_id: form.qris_id || null,
+        fb_pixel_id: form.fb_pixel_id.trim() || null,
       };
 
       if (editing) {
