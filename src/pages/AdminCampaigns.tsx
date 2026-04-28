@@ -38,8 +38,8 @@ const AdminCampaigns = () => {
   const load = async () => {
     setLoading(true);
     const [campRes, qrisRes] = await Promise.all([
-      supabase.from("campaigns").select("*").order("created_at", { ascending: false }),
-      supabase.from("qris_list").select("id, nama, gambar_url, aktif").order("created_at"),
+      (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("qris_list").select("id, nama, gambar_url, aktif").order("created_at"),
     ]);
     setLoading(false);
     if (campRes.error) toast.error(campRes.error.message);
@@ -111,11 +111,11 @@ const AdminCampaigns = () => {
       };
 
       if (editing) {
-        const { error } = await supabase.from("campaigns").update(payload).eq("id", editing.id);
+        const { error } = await (supabase as any).from("campaigns").update(payload).eq("id", editing.id);
         if (error) throw error;
         toast.success("Campaign diperbarui");
       } else {
-        const { error } = await supabase.from("campaigns").insert(payload);
+        const { error } = await (supabase as any).from("campaigns").insert(payload);
         if (error) throw error;
         toast.success("Campaign ditambahkan");
       }
@@ -130,7 +130,7 @@ const AdminCampaigns = () => {
 
   const remove = async (c: Campaign) => {
     if (!confirm(`Hapus campaign "${c.judul}"?`)) return;
-    const { error } = await supabase.from("campaigns").delete().eq("id", c.id);
+    const { error } = await (supabase as any).from("campaigns").delete().eq("id", c.id);
     if (error) toast.error(error.message);
     else { toast.success("Campaign dihapus"); load(); }
   };

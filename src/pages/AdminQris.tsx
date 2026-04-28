@@ -92,11 +92,11 @@ const AdminQris = () => {
       };
 
       if (editing) {
-        const { error } = await supabase.from("qris_list").update(payload).eq("id", editing.id);
+        const { error } = await (supabase as any).from("qris_list").update(payload).eq("id", editing.id);
         if (error) throw error;
         toast.success("QRIS diperbarui");
       } else {
-        const { error } = await supabase.from("qris_list").insert(payload);
+        const { error } = await (supabase as any).from("qris_list").insert(payload);
         if (error) throw error;
         toast.success("QRIS ditambahkan");
       }
@@ -129,13 +129,13 @@ const AdminQris = () => {
       if (path) await supabase.storage.from("qris").remove([path]);
     }
 
-    const { error } = await supabase.from("qris_list").delete().eq("id", q.id);
+    const { error } = await (supabase as any).from("qris_list").delete().eq("id", q.id);
     if (error) toast.error(error.message);
     else { toast.success("QRIS dihapus"); load(); }
   };
 
   const toggleAktif = async (q: Qris) => {
-    const { error } = await supabase.from("qris_list").update({ aktif: !q.aktif }).eq("id", q.id);
+    const { error } = await (supabase as any).from("qris_list").update({ aktif: !q.aktif }).eq("id", q.id);
     if (error) toast.error(error.message);
     else {
       toast.success(q.aktif ? "QRIS dinonaktifkan" : "QRIS diaktifkan");
