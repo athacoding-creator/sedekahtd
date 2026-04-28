@@ -129,7 +129,7 @@ const Index = () => {
       <section className="bg-gradient-to-b from-sky-50 to-slate-50 pt-5 pb-5">
         <div className="container max-w-4xl px-4">
           {/* Hero Carousel */}
-          <div className="relative rounded-2xl overflow-hidden shadow-card animate-fade-in" style={{ aspectRatio: "16/7" }}>
+          <div className="relative rounded-2xl overflow-hidden shadow-card animate-fade-in" style={{ minHeight: "calc(100svh - 160px)", maxHeight: "calc(100svh - 120px)" }}>
             {heroSlides.map((slide, i) => (
               <img
                 key={slide.id}
