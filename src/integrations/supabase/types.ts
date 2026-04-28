@@ -22,6 +22,7 @@ export type Database = {
           id: string
           judul: string
           kategori: string | null
+          qris_id: string | null
           target: number
           terkumpul: number
           updated_at: string
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           judul: string
           kategori?: string | null
+          qris_id?: string | null
           target?: number
           terkumpul?: number
           updated_at?: string
@@ -44,11 +46,20 @@ export type Database = {
           id?: string
           judul?: string
           kategori?: string | null
+          qris_id?: string | null
           target?: number
           terkumpul?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_qris_id_fkey"
+            columns: ["qris_id"]
+            isOneToOne: false
+            referencedRelation: "qris_list"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       donations: {
         Row: {
@@ -96,6 +107,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      heroes: {
+        Row: {
+          aktif: boolean
+          created_at: string
+          gambar_url: string
+          id: string
+          judul: string
+          link_url: string | null
+          urutan: number
+        }
+        Insert: {
+          aktif?: boolean
+          created_at?: string
+          gambar_url: string
+          id?: string
+          judul: string
+          link_url?: string | null
+          urutan?: number
+        }
+        Update: {
+          aktif?: boolean
+          created_at?: string
+          gambar_url?: string
+          id?: string
+          judul?: string
+          link_url?: string | null
+          urutan?: number
+        }
+        Relationships: []
+      }
+      qris_list: {
+        Row: {
+          aktif: boolean
+          created_at: string
+          deskripsi: string | null
+          gambar_url: string
+          id: string
+          nama: string
+        }
+        Insert: {
+          aktif?: boolean
+          created_at?: string
+          deskripsi?: string | null
+          gambar_url: string
+          id?: string
+          nama: string
+        }
+        Update: {
+          aktif?: boolean
+          created_at?: string
+          deskripsi?: string | null
+          gambar_url?: string
+          id?: string
+          nama?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -163,6 +249,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      sync_campaign_terkumpul: {
+        Args: { p_campaign_id: string }
+        Returns: undefined
       }
     }
     Enums: {
