@@ -129,7 +129,7 @@ const Index = () => {
       <section className="bg-gradient-to-b from-sky-50 to-slate-50 pt-5 pb-5">
         <div className="container max-w-4xl px-4">
           {/* Hero Carousel */}
-          <div className="relative rounded-2xl overflow-hidden shadow-card animate-fade-in" style={{ aspectRatio: "16/9" }}>
+          <div className="relative rounded-2xl overflow-hidden shadow-card animate-fade-in" style={{ aspectRatio: "16/7" }}>
             {heroSlides.map((slide, i) => (
               <img
                 key={slide.id}
@@ -200,25 +200,25 @@ const Index = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="mt-4 bg-white rounded-2xl shadow-card border border-slate-100 overflow-hidden animate-fade-in-up">
-            <div className="flex flex-col divide-y divide-slate-100">
-              <div className="flex flex-col items-center py-4 px-5">
-                <span className="text-sm text-slate-500 font-medium mb-1">Total Donasi</span>
-                <span className="font-display font-bold text-base text-slate-800 tracking-tight">
+          <div className="mt-4 bg-[#1a6b3c] rounded-2xl shadow-card overflow-hidden animate-fade-in-up">
+            <div className="flex flex-row divide-x divide-white/20">
+              <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
+                <span className="font-display font-bold text-xl text-white tracking-tight leading-tight">
                   Rp <CountUp end={stats.total} duration={2} separator="." useEasing />
                 </span>
+                <span className="text-[11px] text-white/80 font-medium mt-1 text-center leading-tight">Total Donasi</span>
               </div>
-              <div className="flex flex-col items-center py-4 px-5">
-                <span className="text-sm text-slate-500 font-medium mb-1">Jumlah Donasi</span>
-                <span className="font-display font-bold text-base text-slate-800 tracking-tight">
+              <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
+                <span className="font-display font-bold text-xl text-white tracking-tight leading-tight">
                   <CountUp end={stats.jumlah} duration={2} separator="." useEasing />
                 </span>
+                <span className="text-[11px] text-white/80 font-medium mt-1 text-center leading-tight">Jumlah Donasi</span>
               </div>
-              <div className="flex flex-col items-center py-4 px-5">
-                <span className="text-sm text-slate-500 font-medium mb-1">Aktif Program</span>
-                <span className="font-display font-bold text-base text-slate-800 tracking-tight">
+              <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
+                <span className="font-display font-bold text-xl text-white tracking-tight leading-tight">
                   <CountUp end={stats.aktif} duration={2} useEasing />
                 </span>
+                <span className="text-[11px] text-white/80 font-medium mt-1 text-center leading-tight">Aktif Program</span>
               </div>
             </div>
           </div>
