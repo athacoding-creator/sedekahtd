@@ -22,18 +22,20 @@ type Campaign = {
   harga_paket: number | null;
 };
 
-type Qris = {
+type PaymentMethod = {
   id: string;
   nama: string;
-  gambar_url: string;
+  tipe: string;
+  gambar_url: string | null;
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
-  const [qrisList, setQrisList] = useState<Qris[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [campaignPayments, setCampaignPayments] = useState<Record<string, string[]>>({}); // campaign_id -> [payment_method_id]
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
@@ -43,14 +45,22 @@ const AdminCampaigns = () => {
 
   const load = async () => {
     setLoading(true);
-    const [campRes, qrisRes] = await Promise.all([
+    const [campRes, pmRes, cpmRes] = await Promise.all([
       (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("qris_list").select("id, nama, gambar_url, aktif").order("created_at"),
+      (supabase as any).from("payment_methods").select("id, nama, tipe, gambar_url, aktif").order("urutan").order("created_at"),
+      (supabase as any).from("campaign_payment_methods").select("campaign_id, payment_method_id"),
     ]);
     setLoading(false);
     if (campRes.error) toast.error(campRes.error.message);
     else setItems((campRes.data as Campaign[]) ?? []);
-    if (!qrisRes.error) setQrisList((qrisRes.data as Qris[]) ?? []);
+    if (!pmRes.error) setPaymentMethods((pmRes.data as PaymentMethod[]) ?? []);
+    if (!cpmRes.error) {
+      const map: Record<string, string[]> = {};
+      ((cpmRes.data as any[]) ?? []).forEach(r => {
+        (map[r.campaign_id] ||= []).push(r.payment_method_id);
+      });
+      setCampaignPayments(map);
+    }
   };
 
   useEffect(() => {
