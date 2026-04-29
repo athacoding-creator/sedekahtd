@@ -133,8 +133,8 @@ const AdminDonations = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-soft">
-        <div className="overflow-x-auto">
+      <div className="bg-card rounded-2xl border border-border shadow-soft min-w-0 max-w-full">
+        <div className="overflow-x-auto rounded-2xl">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left">
               <tr>
