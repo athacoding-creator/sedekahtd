@@ -422,42 +422,48 @@ const AdminCampaigns = () => {
                 </div>
               )}
 
-              {/* QRIS Selector */}
-              <Field label="QRIS Pembayaran">
-                {qrisList.length === 0 ? (
+              {/* Payment Methods Selector (multi) */}
+              <Field label="Metode Pembayaran (pilih ≥ 1)">
+                {paymentMethods.length === 0 ? (
                   <div className="p-3 rounded-lg bg-orange-50 border border-orange-200 text-sm text-orange-600 flex items-center gap-2">
                     <QrCode className="h-4 w-4" />
-                    Belum ada QRIS. Tambahkan QRIS di menu <strong>Kelola QRIS</strong> terlebih dahulu.
+                    Belum ada metode pembayaran. Tambahkan di menu <strong>Kelola Pembayaran</strong> dulu.
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <select
-                      value={form.qris_id}
-                      onChange={e => setForm({ ...form, qris_id: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none"
-                    >
-                      <option value="">— Pilih QRIS (opsional) —</option>
-                      {qrisList.map(q => (
-                        <option key={q.id} value={q.id} disabled={!q.aktif}>
-                          {q.nama}{!q.aktif ? " (nonaktif)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedQris && (
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                        <img
-                          src={selectedQris.gambar_url}
-                          alt={selectedQris.nama}
-                          className="h-16 w-16 object-contain rounded-lg border border-border bg-white p-1"
-                        />
-                        <div>
-                          <p className="font-semibold text-sm">{selectedQris.nama}</p>
-                          <p className="text-xs text-muted-foreground">QRIS ini akan ditampilkan saat donatur melakukan pembayaran</p>
-                        </div>
-                      </div>
-                    )}
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto p-2 rounded-lg border border-border bg-background">
+                    {paymentMethods.map(pm => {
+                      const checked = form.payment_method_ids.includes(pm.id);
+                      return (
+                        <label
+                          key={pm.id}
+                          className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer border-2 transition-smooth ${
+                            checked ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted/50"
+                          } ${!pm.aktif ? "opacity-50" : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={!pm.aktif}
+                            onChange={() => togglePayment(pm.id)}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          {pm.gambar_url ? (
+                            <img src={pm.gambar_url} alt="" className="h-8 w-8 object-contain rounded border border-border bg-white p-0.5" />
+                          ) : (
+                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary uppercase">
+                              {pm.tipe.slice(0, 4)}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{pm.nama}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase">{pm.tipe.replace("_", " ")}{!pm.aktif ? " · nonaktif" : ""}</div>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
+                <p className="text-xs text-muted-foreground mt-1.5">Donatur akan memilih salah satu dari metode yang dicentang.</p>
               </Field>
 
               <Field label="Gambar Campaign">
