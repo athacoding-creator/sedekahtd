@@ -89,7 +89,12 @@ const Donate = () => {
   const nominalPaket = isPaket ? jumlahPaket * hargaPaket : 0;
   const nominalFinal = isPaket ? nominalPaket : Number(nominal);
 
-  const qris = campaign?.qris_list ?? null;
+  const buildMetodeLabel = (pm: PaymentMethod | null) => {
+    if (!pm) return "QRIS";
+    const base = `${tipeLabel(pm.tipe)} - ${pm.nama}`;
+    if (pm.nomor_rekening) return `${base} (${pm.nomor_rekening}${pm.nama_pemilik ? ` a.n. ${pm.nama_pemilik}` : ""})`;
+    return base;
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -126,7 +131,7 @@ const Donate = () => {
         campaign_id: id,
         nama: parse.data.nama,
         nominal: parse.data.nominal,
-        metode_pembayaran: qris ? `QRIS - ${qris.nama}` : "QRIS",
+        metode_pembayaran: buildMetodeLabel(selectedPm),
         bukti_transfer: path,
         status: "pending",
       });
