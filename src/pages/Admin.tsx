@@ -36,7 +36,7 @@ const Admin = () => {
       supabase.from("donations").select("id", { count: "exact", head: true }),
       supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "pending"),
       (supabase as any).from("heroes").select("id", { count: "exact", head: true }),
-      (supabase as any).from("qris_list").select("id", { count: "exact", head: true }),
+      (supabase as any).from("payment_methods").select("id", { count: "exact", head: true }),
     ]).then(([c, d, p, h, q]) => {
       setStats({
         campaigns: c.count ?? 0,
@@ -184,7 +184,7 @@ const Admin = () => {
           <StatCard label="Total Donasi" value={stats.donations} />
           <StatCard label="Pending" value={stats.pending} highlight />
           <StatCard label="Hero Banner" value={stats.heroes} />
-          <StatCard label="QRIS" value={stats.qris} />
+          <StatCard label="Pembayaran" value={stats.qris} />
         </div>
 
         {/* Menu */}
@@ -212,10 +212,10 @@ const Admin = () => {
             desc="Atur tampilan slider/banner di halaman utama"
           />
           <MenuCard
-            to="/admin/qris"
+            to="/admin/payments"
             icon={<QrCode className="h-6 w-6 text-primary" />}
             title="Kelola Pembayaran"
-            desc="Tambah dan kelola data Pembayaran untuk setiap campaign"
+            desc="QRIS, BSI, GoPay, ShopeePay, dan metode pembayaran lain"
           />
           <MenuCard
             to="/admin/storage"

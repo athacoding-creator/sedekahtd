@@ -5,27 +5,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus, Landmark, Wallet, CreditCard } from "lucide-react";
 import { z } from "zod";
 import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
 import { loadFbPixel, fbTrack } from "@/lib/tracking";
 
-type QrisData = {
+type PaymentMethod = {
   id: string;
   nama: string;
-  gambar_url: string;
+  tipe: "qris" | "bank_transfer" | "gopay" | "shopeepay" | "dana" | "ovo" | "lainnya";
+  nomor_rekening: string | null;
+  nama_pemilik: string | null;
+  gambar_url: string | null;
   deskripsi: string | null;
+  aktif: boolean;
 };
 
-type CampaignWithQris = Campaign & {
-  qris_id: string | null;
-  qris_list: QrisData | null;
+type CampaignWithPayments = Campaign & {
   fb_pixel_id?: string | null;
   jenis_campaign: string;
   nama_paket: string | null;
   harga_paket: number | null;
 };
+
+const isQrisType = (t: PaymentMethod["tipe"]) => t === "qris";
+const tipeLabel = (t: PaymentMethod["tipe"]) =>
+  ({ qris: "QRIS", bank_transfer: "Transfer Bank", gopay: "GoPay", shopeepay: "ShopeePay", dana: "DANA", ovo: "OVO", lainnya: "Lainnya" }[t]);
+const tipeIcon = (t: PaymentMethod["tipe"]) => isQrisType(t) ? QrCode : t === "bank_transfer" ? Landmark : ["gopay","shopeepay","dana","ovo"].includes(t) ? Wallet : CreditCard;
 
 const schema = z.object({
   nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
@@ -37,7 +44,9 @@ const nominalQuick = [25000, 50000, 100000, 250000, 500000, 1000000];
 const Donate = () => {
   const { id } = useParams();
   const nav = useNavigate();
-  const [campaign, setCampaign] = useState<CampaignWithQris | null>(null);
+  const [campaign, setCampaign] = useState<CampaignWithPayments | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedPm, setSelectedPm] = useState<PaymentMethod | null>(null);
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [nominal, setNominal] = useState<string>("");
@@ -48,20 +57,31 @@ const Donate = () => {
 
   useEffect(() => {
     if (!id) return;
-    (supabase as any)
-      .from("campaigns")
-      .select("*, qris_list(id, nama, gambar_url, deskripsi)")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }: any) => {
-        const c = data as CampaignWithQris;
-        setCampaign(c);
-        if (c?.fb_pixel_id) loadFbPixel(c.fb_pixel_id);
-        // Jika paket, set nominal otomatis
-        if (c?.jenis_campaign === "paket" && c.harga_paket) {
-          setNominal(String(c.harga_paket));
-        }
-      });
+    (async () => {
+      const { data: c } = await (supabase as any).from("campaigns").select("*").eq("id", id).maybeSingle();
+      if (!c) return;
+      setCampaign(c as CampaignWithPayments);
+      if ((c as any).fb_pixel_id) loadFbPixel((c as any).fb_pixel_id);
+      if (c.jenis_campaign === "paket" && c.harga_paket) setNominal(String(c.harga_paket));
+
+      // Load payment methods linked to this campaign
+      const { data: links } = await (supabase as any)
+        .from("campaign_payment_methods")
+        .select("payment_method_id")
+        .eq("campaign_id", id);
+      const ids = (links ?? []).map((l: any) => l.payment_method_id);
+      if (ids.length > 0) {
+        const { data: pms } = await (supabase as any)
+          .from("payment_methods")
+          .select("*")
+          .in("id", ids)
+          .eq("aktif", true)
+          .order("urutan");
+        const list = (pms as PaymentMethod[]) ?? [];
+        setPaymentMethods(list);
+        if (list.length > 0) setSelectedPm(list[0]);
+      }
+    })();
   }, [id]);
 
   const isPaket = campaign?.jenis_campaign === "paket";
@@ -69,7 +89,12 @@ const Donate = () => {
   const nominalPaket = isPaket ? jumlahPaket * hargaPaket : 0;
   const nominalFinal = isPaket ? nominalPaket : Number(nominal);
 
-  const qris = campaign?.qris_list ?? null;
+  const buildMetodeLabel = (pm: PaymentMethod | null) => {
+    if (!pm) return "QRIS";
+    const base = `${tipeLabel(pm.tipe)} - ${pm.nama}`;
+    if (pm.nomor_rekening) return `${base} (${pm.nomor_rekening}${pm.nama_pemilik ? ` a.n. ${pm.nama_pemilik}` : ""})`;
+    return base;
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -106,7 +131,7 @@ const Donate = () => {
         campaign_id: id,
         nama: parse.data.nama,
         nominal: parse.data.nominal,
-        metode_pembayaran: qris ? `QRIS - ${qris.nama}` : "QRIS",
+        metode_pembayaran: buildMetodeLabel(selectedPm),
         bukti_transfer: path,
         status: "pending",
       });
@@ -180,26 +205,89 @@ const Donate = () => {
           </div>
 
           <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-5">
-            {/* QR Code */}
-            <div className="bg-white rounded-2xl p-4 border border-border/60">
-              {qris ? (
-                <div className="text-center">
-                  <img src={qris.gambar_url} alt={qris.nama} className="w-full max-w-xs mx-auto" />
-                  <p className="text-sm font-semibold mt-2 text-foreground">{qris.nama}</p>
-                  {qris.deskripsi && <p className="text-xs text-muted-foreground mt-1">{qris.deskripsi}</p>}
+            {/* Pilih metode (jika lebih dari 1) */}
+            {paymentMethods.length > 1 && (
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Pilih Metode Pembayaran</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentMethods.map(pm => {
+                    const Icon = tipeIcon(pm.tipe);
+                    const active = selectedPm?.id === pm.id;
+                    return (
+                      <button
+                        key={pm.id}
+                        type="button"
+                        onClick={() => setSelectedPm(pm)}
+                        className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-smooth text-left ${
+                          active ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40"
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 flex-shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs truncate">{pm.nama}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase">{tipeLabel(pm.tipe)}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Detail Pembayaran */}
+            {selectedPm ? (
+              isQrisType(selectedPm.tipe) ? (
+                <div className="bg-white rounded-2xl p-4 border border-border/60 text-center">
+                  {selectedPm.gambar_url ? (
+                    <img src={selectedPm.gambar_url} alt={selectedPm.nama} className="w-full max-w-xs mx-auto" />
+                  ) : (
+                    <img src={qrisPlaceholder} alt={selectedPm.nama} className="w-full max-w-xs mx-auto" />
+                  )}
+                  <p className="text-sm font-semibold mt-2 text-foreground">{selectedPm.nama}</p>
+                  {selectedPm.deskripsi && <p className="text-xs text-muted-foreground mt-1">{selectedPm.deskripsi}</p>}
+                  <div className="flex items-center justify-center gap-2 mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                    <QrCode className="h-4 w-4 flex-shrink-0" />
+                    Scan QR di atas dengan aplikasi e-wallet/m-banking Anda.
+                  </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <img src={qrisPlaceholder} alt="QRIS Yayasan Teras Dakwah" className="w-full max-w-xs mx-auto" width={512} height={640} />
-                  <p className="text-sm font-semibold mt-2 text-foreground">QRIS — Yayasan Teras Dakwah</p>
+                <div className="rounded-2xl border border-border bg-background p-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    {selectedPm.gambar_url && (
+                      <img src={selectedPm.gambar_url} alt={selectedPm.nama} className="h-12 w-12 object-contain rounded-lg border border-border bg-white p-1" />
+                    )}
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase font-bold">{tipeLabel(selectedPm.tipe)}</div>
+                      <div className="font-display font-bold">{selectedPm.nama}</div>
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 border border-border p-4 text-center">
+                    <div className="text-[10px] uppercase text-muted-foreground font-bold tracking-wide mb-1">
+                      {selectedPm.tipe === "bank_transfer" ? "Nomor Rekening" : "Nomor Tujuan"}
+                    </div>
+                    <div className="font-mono font-extrabold text-2xl text-foreground tracking-wider mb-2">
+                      {selectedPm.nomor_rekening}
+                    </div>
+                    {selectedPm.nama_pemilik && (
+                      <div className="text-xs text-muted-foreground mb-3">a.n. <span className="font-semibold text-foreground">{selectedPm.nama_pemilik}</span></div>
+                    )}
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(selectedPm.nomor_rekening ?? "");
+                        toast.success("Nomor disalin");
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-button hover:scale-[1.02] transition-smooth"
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Salin Nomor
+                    </button>
+                  </div>
+                  {selectedPm.deskripsi && <p className="text-xs text-muted-foreground">{selectedPm.deskripsi}</p>}
                 </div>
-              )}
-            </div>
-
-            {!qris && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
-                <QrCode className="h-4 w-4 flex-shrink-0" />
-                Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
+              )
+            ) : (
+              <div className="bg-white rounded-2xl p-4 border border-border/60 text-center">
+                <img src={qrisPlaceholder} alt="QRIS" className="w-full max-w-xs mx-auto" width={512} height={640} />
+                <p className="text-sm font-semibold mt-2 text-foreground">QRIS — Yayasan Teras Dakwah</p>
               </div>
             )}
 
@@ -348,20 +436,50 @@ const Donate = () => {
           )}
 
           {/* Metode pembayaran */}
-          <div className="rounded-xl border border-border bg-background p-4">
-            <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
-            {qris ? (
-              <div className="flex items-center gap-3">
-                <img src={qris.gambar_url} alt={qris.nama} className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5" />
-                <div>
-                  <div className="font-semibold text-sm">{qris.nama}</div>
-                  {qris.deskripsi && <div className="text-xs text-muted-foreground">{qris.deskripsi}</div>}
-                </div>
+          {paymentMethods.length > 0 ? (
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Metode Pembayaran</div>
+              <div className="space-y-2">
+                {paymentMethods.map(pm => {
+                  const Icon = tipeIcon(pm.tipe);
+                  const active = selectedPm?.id === pm.id;
+                  return (
+                    <button
+                      key={pm.id}
+                      type="button"
+                      onClick={() => setSelectedPm(pm)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-smooth text-left ${
+                        active ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40"
+                      }`}
+                    >
+                      {pm.gambar_url ? (
+                        <img src={pm.gambar_url} alt="" className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{pm.nama}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {tipeLabel(pm.tipe)}
+                          {pm.nomor_rekening && ` · ${pm.nomor_rekening}`}
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${active ? "border-primary bg-primary" : "border-border"}`}>
+                        {active && <CheckCircle2 className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-background p-4">
+              <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
               <div className="font-semibold">QRIS — Yayasan Teras Dakwah</div>
-            )}
-          </div>
+            </div>
+          )}
 
           <button
             onClick={goPay}

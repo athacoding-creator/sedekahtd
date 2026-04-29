@@ -22,18 +22,20 @@ type Campaign = {
   harga_paket: number | null;
 };
 
-type Qris = {
+type PaymentMethod = {
   id: string;
   nama: string;
-  gambar_url: string;
+  tipe: string;
+  gambar_url: string | null;
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", qris_id: "", fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
-  const [qrisList, setQrisList] = useState<Qris[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [campaignPayments, setCampaignPayments] = useState<Record<string, string[]>>({}); // campaign_id -> [payment_method_id]
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Campaign | null>(null);
@@ -43,14 +45,22 @@ const AdminCampaigns = () => {
 
   const load = async () => {
     setLoading(true);
-    const [campRes, qrisRes] = await Promise.all([
+    const [campRes, pmRes, cpmRes] = await Promise.all([
       (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("qris_list").select("id, nama, gambar_url, aktif").order("created_at"),
+      (supabase as any).from("payment_methods").select("id, nama, tipe, gambar_url, aktif").order("urutan").order("created_at"),
+      (supabase as any).from("campaign_payment_methods").select("campaign_id, payment_method_id"),
     ]);
     setLoading(false);
     if (campRes.error) toast.error(campRes.error.message);
     else setItems((campRes.data as Campaign[]) ?? []);
-    if (!qrisRes.error) setQrisList((qrisRes.data as Qris[]) ?? []);
+    if (!pmRes.error) setPaymentMethods((pmRes.data as PaymentMethod[]) ?? []);
+    if (!cpmRes.error) {
+      const map: Record<string, string[]> = {};
+      ((cpmRes.data as any[]) ?? []).forEach(r => {
+        (map[r.campaign_id] ||= []).push(r.payment_method_id);
+      });
+      setCampaignPayments(map);
+    }
   };
 
   useEffect(() => {
@@ -82,7 +92,7 @@ const AdminCampaigns = () => {
       kategori: c.kategori ?? "",
       target: c.target,
       gambar_url: c.gambar_url ?? "",
-      qris_id: c.qris_id ?? "",
+      payment_method_ids: campaignPayments[c.id] ?? [],
       fb_pixel_id: c.fb_pixel_id ?? "",
       is_pilihan: c.is_pilihan ?? false,
       jenis_campaign: c.jenis_campaign ?? "uang",
@@ -118,7 +128,7 @@ const AdminCampaigns = () => {
         kategori: form.kategori.trim() || null,
         target: Number(form.target),
         gambar_url,
-        qris_id: form.qris_id || null,
+        qris_id: form.payment_method_ids[0] || null, // legacy: simpan id pertama untuk kompatibilitas
         fb_pixel_id: form.fb_pixel_id.trim() || null,
         is_pilihan: form.is_pilihan,
         jenis_campaign: form.jenis_campaign,
@@ -126,14 +136,26 @@ const AdminCampaigns = () => {
         harga_paket: form.jenis_campaign === "paket" ? (Number(form.harga_paket) || null) : null,
       };
 
+      let campaignId: string | null = editing?.id ?? null;
       if (editing) {
         const { error } = await (supabase as any).from("campaigns").update(payload).eq("id", editing.id);
         if (error) throw error;
         toast.success("Campaign diperbarui");
       } else {
-        const { error } = await (supabase as any).from("campaigns").insert(payload);
+        const { data: ins, error } = await (supabase as any).from("campaigns").insert(payload).select("id").single();
         if (error) throw error;
+        campaignId = ins?.id ?? null;
         toast.success("Campaign ditambahkan");
+      }
+
+      // Sync junction table campaign_payment_methods
+      if (campaignId) {
+        await (supabase as any).from("campaign_payment_methods").delete().eq("campaign_id", campaignId);
+        if (form.payment_method_ids.length > 0) {
+          const rows = form.payment_method_ids.map(pid => ({ campaign_id: campaignId, payment_method_id: pid }));
+          const { error: jerr } = await (supabase as any).from("campaign_payment_methods").insert(rows);
+          if (jerr) throw jerr;
+        }
       }
       setOpen(false);
       load();
@@ -151,7 +173,14 @@ const AdminCampaigns = () => {
     else { toast.success("Campaign dihapus"); load(); }
   };
 
-  const selectedQris = qrisList.find(q => q.id === form.qris_id);
+  const togglePayment = (pid: string) => {
+    setForm(f => ({
+      ...f,
+      payment_method_ids: f.payment_method_ids.includes(pid)
+        ? f.payment_method_ids.filter(x => x !== pid)
+        : [...f.payment_method_ids, pid],
+    }));
+  };
 
   return (
     <AdminLayout
@@ -182,7 +211,7 @@ const AdminCampaigns = () => {
                 <th className="px-4 py-3 font-bold">Gambar</th>
                 <th className="px-4 py-3 font-bold">Judul</th>
                 <th className="px-4 py-3 font-bold">Pilihan</th>
-                <th className="px-4 py-3 font-bold">QRIS</th>
+                <th className="px-4 py-3 font-bold">Pembayaran</th>
                 <th className="px-4 py-3 font-bold">Target</th>
                 <th className="px-4 py-3 font-bold">Terkumpul</th>
                 <th className="px-4 py-3 font-bold">Progress</th>
@@ -199,7 +228,8 @@ const AdminCampaigns = () => {
                 <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
               )}
               {items.map(c => {
-                const qris = qrisList.find(q => q.id === c.qris_id);
+                const pmIds = campaignPayments[c.id] ?? [];
+                const pmList = pmIds.map(id => paymentMethods.find(p => p.id === id)).filter(Boolean) as PaymentMethod[];
                 const pct = c.target > 0 ? Math.min(100, Math.round((c.terkumpul / c.target) * 100)) : 0;
                 return (
                   <tr key={c.id} className="border-t border-border hover:bg-muted/30 transition-smooth">
@@ -229,10 +259,14 @@ const AdminCampaigns = () => {
                       </button>
                     </td>
                     <td className="px-4 py-3">
-                      {qris ? (
-                        <div className="flex items-center gap-1.5">
-                          <img src={qris.gambar_url} alt={qris.nama} className="h-8 w-8 object-contain rounded border border-border bg-white p-0.5" />
-                          <span className="text-xs text-muted-foreground truncate max-w-[80px]">{qris.nama}</span>
+                      {pmList.length > 0 ? (
+                        <div className="flex items-center gap-1 flex-wrap max-w-[180px]">
+                          {pmList.slice(0, 3).map(pm => (
+                            <span key={pm.id} title={pm.nama} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">
+                              {pm.tipe === "qris" ? "QRIS" : pm.tipe === "bank_transfer" ? "BANK" : pm.tipe.toUpperCase()}
+                            </span>
+                          ))}
+                          {pmList.length > 3 && <span className="text-[10px] text-muted-foreground">+{pmList.length - 3}</span>}
                         </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-orange-500">
@@ -388,42 +422,48 @@ const AdminCampaigns = () => {
                 </div>
               )}
 
-              {/* QRIS Selector */}
-              <Field label="QRIS Pembayaran">
-                {qrisList.length === 0 ? (
+              {/* Payment Methods Selector (multi) */}
+              <Field label="Metode Pembayaran (pilih ≥ 1)">
+                {paymentMethods.length === 0 ? (
                   <div className="p-3 rounded-lg bg-orange-50 border border-orange-200 text-sm text-orange-600 flex items-center gap-2">
                     <QrCode className="h-4 w-4" />
-                    Belum ada QRIS. Tambahkan QRIS di menu <strong>Kelola QRIS</strong> terlebih dahulu.
+                    Belum ada metode pembayaran. Tambahkan di menu <strong>Kelola Pembayaran</strong> dulu.
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <select
-                      value={form.qris_id}
-                      onChange={e => setForm({ ...form, qris_id: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none"
-                    >
-                      <option value="">— Pilih QRIS (opsional) —</option>
-                      {qrisList.map(q => (
-                        <option key={q.id} value={q.id} disabled={!q.aktif}>
-                          {q.nama}{!q.aktif ? " (nonaktif)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedQris && (
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                        <img
-                          src={selectedQris.gambar_url}
-                          alt={selectedQris.nama}
-                          className="h-16 w-16 object-contain rounded-lg border border-border bg-white p-1"
-                        />
-                        <div>
-                          <p className="font-semibold text-sm">{selectedQris.nama}</p>
-                          <p className="text-xs text-muted-foreground">QRIS ini akan ditampilkan saat donatur melakukan pembayaran</p>
-                        </div>
-                      </div>
-                    )}
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto p-2 rounded-lg border border-border bg-background">
+                    {paymentMethods.map(pm => {
+                      const checked = form.payment_method_ids.includes(pm.id);
+                      return (
+                        <label
+                          key={pm.id}
+                          className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer border-2 transition-smooth ${
+                            checked ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted/50"
+                          } ${!pm.aktif ? "opacity-50" : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={!pm.aktif}
+                            onChange={() => togglePayment(pm.id)}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          {pm.gambar_url ? (
+                            <img src={pm.gambar_url} alt="" className="h-8 w-8 object-contain rounded border border-border bg-white p-0.5" />
+                          ) : (
+                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary uppercase">
+                              {pm.tipe.slice(0, 4)}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{pm.nama}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase">{pm.tipe.replace("_", " ")}{!pm.aktif ? " · nonaktif" : ""}</div>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
+                <p className="text-xs text-muted-foreground mt-1.5">Donatur akan memilih salah satu dari metode yang dicentang.</p>
               </Field>
 
               <Field label="Gambar Campaign">

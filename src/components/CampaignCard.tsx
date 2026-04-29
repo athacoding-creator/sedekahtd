@@ -10,6 +10,7 @@ export type Campaign = {
   target: number;
   terkumpul: number;
   kategori: string | null;
+  is_pilihan?: boolean;
 };
 
 /** Card style Teras Dakwah: gambar atas, info bawah, progress hijau */
