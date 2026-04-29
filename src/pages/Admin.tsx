@@ -36,7 +36,7 @@ const Admin = () => {
       supabase.from("donations").select("id", { count: "exact", head: true }),
       supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "pending"),
       (supabase as any).from("heroes").select("id", { count: "exact", head: true }),
-      (supabase as any).from("qris_list").select("id", { count: "exact", head: true }),
+      (supabase as any).from("payment_methods").select("id", { count: "exact", head: true }),
     ]).then(([c, d, p, h, q]) => {
       setStats({
         campaigns: c.count ?? 0,
@@ -184,7 +184,7 @@ const Admin = () => {
           <StatCard label="Total Donasi" value={stats.donations} />
           <StatCard label="Pending" value={stats.pending} highlight />
           <StatCard label="Hero Banner" value={stats.heroes} />
-          <StatCard label="QRIS" value={stats.qris} />
+          <StatCard label="Pembayaran" value={stats.qris} />
         </div>
 
         {/* Menu */}
