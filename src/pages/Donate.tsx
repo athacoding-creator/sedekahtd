@@ -205,34 +205,6 @@ const Donate = () => {
           </div>
 
           <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-5">
-            {/* Pilih metode (jika lebih dari 1) */}
-            {paymentMethods.length > 1 && (
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Pilih Metode Pembayaran</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {paymentMethods.map(pm => {
-                    const Icon = tipeIcon(pm.tipe);
-                    const active = selectedPm?.id === pm.id;
-                    return (
-                      <button
-                        key={pm.id}
-                        type="button"
-                        onClick={() => setSelectedPm(pm)}
-                        className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-smooth text-left ${
-                          active ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40"
-                        }`}
-                      >
-                        <Icon className={`h-4 w-4 flex-shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                        <div className="min-w-0">
-                          <div className="font-bold text-xs truncate">{pm.nama}</div>
-                          <div className="text-[10px] text-muted-foreground uppercase">{tipeLabel(pm.tipe)}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Detail Pembayaran */}
             {selectedPm ? (
