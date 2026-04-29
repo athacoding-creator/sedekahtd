@@ -228,7 +228,8 @@ const AdminCampaigns = () => {
                 <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
               )}
               {items.map(c => {
-                const qris = qrisList.find(q => q.id === c.qris_id);
+                const pmIds = campaignPayments[c.id] ?? [];
+                const pmList = pmIds.map(id => paymentMethods.find(p => p.id === id)).filter(Boolean) as PaymentMethod[];
                 const pct = c.target > 0 ? Math.min(100, Math.round((c.terkumpul / c.target) * 100)) : 0;
                 return (
                   <tr key={c.id} className="border-t border-border hover:bg-muted/30 transition-smooth">
