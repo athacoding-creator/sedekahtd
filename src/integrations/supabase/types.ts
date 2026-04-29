@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_payment_methods: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          payment_method_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          payment_method_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          payment_method_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_payment_methods_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_payment_methods_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_visits: {
         Row: {
           campaign_id: string
@@ -176,6 +212,48 @@ export type Database = {
           id?: string
           judul?: string
           link_url?: string | null
+          urutan?: number
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          aktif: boolean
+          created_at: string
+          deskripsi: string | null
+          gambar_url: string | null
+          id: string
+          nama: string
+          nama_pemilik: string | null
+          nomor_rekening: string | null
+          tipe: string
+          updated_at: string
+          urutan: number
+        }
+        Insert: {
+          aktif?: boolean
+          created_at?: string
+          deskripsi?: string | null
+          gambar_url?: string | null
+          id?: string
+          nama: string
+          nama_pemilik?: string | null
+          nomor_rekening?: string | null
+          tipe?: string
+          updated_at?: string
+          urutan?: number
+        }
+        Update: {
+          aktif?: boolean
+          created_at?: string
+          deskripsi?: string | null
+          gambar_url?: string | null
+          id?: string
+          nama?: string
+          nama_pemilik?: string | null
+          nomor_rekening?: string | null
+          tipe?: string
+          updated_at?: string
           urutan?: number
         }
         Relationships: []
