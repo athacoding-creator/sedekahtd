@@ -129,7 +129,7 @@ const AdminCampaigns = () => {
         kategori: form.kategori.trim() || null,
         target: Number(form.target),
         gambar_url,
-        qris_id: form.payment_method_ids[0] || null, // legacy: simpan id pertama untuk kompatibilitas
+        qris_id: null, // legacy field, tidak digunakan lagi (metode via campaign_payment_methods)
         fb_pixel_id: form.fb_pixel_id.trim() || null,
         is_pilihan: form.is_pilihan,
         jenis_campaign: form.jenis_campaign,
