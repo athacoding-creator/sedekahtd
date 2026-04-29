@@ -205,26 +205,89 @@ const Donate = () => {
           </div>
 
           <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-5">
-            {/* QR Code */}
-            <div className="bg-white rounded-2xl p-4 border border-border/60">
-              {qris ? (
-                <div className="text-center">
-                  <img src={qris.gambar_url} alt={qris.nama} className="w-full max-w-xs mx-auto" />
-                  <p className="text-sm font-semibold mt-2 text-foreground">{qris.nama}</p>
-                  {qris.deskripsi && <p className="text-xs text-muted-foreground mt-1">{qris.deskripsi}</p>}
+            {/* Pilih metode (jika lebih dari 1) */}
+            {paymentMethods.length > 1 && (
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Pilih Metode Pembayaran</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentMethods.map(pm => {
+                    const Icon = tipeIcon(pm.tipe);
+                    const active = selectedPm?.id === pm.id;
+                    return (
+                      <button
+                        key={pm.id}
+                        type="button"
+                        onClick={() => setSelectedPm(pm)}
+                        className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-smooth text-left ${
+                          active ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40"
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 flex-shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs truncate">{pm.nama}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase">{tipeLabel(pm.tipe)}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Detail Pembayaran */}
+            {selectedPm ? (
+              isQrisType(selectedPm.tipe) ? (
+                <div className="bg-white rounded-2xl p-4 border border-border/60 text-center">
+                  {selectedPm.gambar_url ? (
+                    <img src={selectedPm.gambar_url} alt={selectedPm.nama} className="w-full max-w-xs mx-auto" />
+                  ) : (
+                    <img src={qrisPlaceholder} alt={selectedPm.nama} className="w-full max-w-xs mx-auto" />
+                  )}
+                  <p className="text-sm font-semibold mt-2 text-foreground">{selectedPm.nama}</p>
+                  {selectedPm.deskripsi && <p className="text-xs text-muted-foreground mt-1">{selectedPm.deskripsi}</p>}
+                  <div className="flex items-center justify-center gap-2 mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                    <QrCode className="h-4 w-4 flex-shrink-0" />
+                    Scan QR di atas dengan aplikasi e-wallet/m-banking Anda.
+                  </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <img src={qrisPlaceholder} alt="QRIS Yayasan Teras Dakwah" className="w-full max-w-xs mx-auto" width={512} height={640} />
-                  <p className="text-sm font-semibold mt-2 text-foreground">QRIS — Yayasan Teras Dakwah</p>
+                <div className="rounded-2xl border border-border bg-background p-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    {selectedPm.gambar_url && (
+                      <img src={selectedPm.gambar_url} alt={selectedPm.nama} className="h-12 w-12 object-contain rounded-lg border border-border bg-white p-1" />
+                    )}
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase font-bold">{tipeLabel(selectedPm.tipe)}</div>
+                      <div className="font-display font-bold">{selectedPm.nama}</div>
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 border border-border p-4 text-center">
+                    <div className="text-[10px] uppercase text-muted-foreground font-bold tracking-wide mb-1">
+                      {selectedPm.tipe === "bank_transfer" ? "Nomor Rekening" : "Nomor Tujuan"}
+                    </div>
+                    <div className="font-mono font-extrabold text-2xl text-foreground tracking-wider mb-2">
+                      {selectedPm.nomor_rekening}
+                    </div>
+                    {selectedPm.nama_pemilik && (
+                      <div className="text-xs text-muted-foreground mb-3">a.n. <span className="font-semibold text-foreground">{selectedPm.nama_pemilik}</span></div>
+                    )}
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(selectedPm.nomor_rekening ?? "");
+                        toast.success("Nomor disalin");
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-button hover:scale-[1.02] transition-smooth"
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Salin Nomor
+                    </button>
+                  </div>
+                  {selectedPm.deskripsi && <p className="text-xs text-muted-foreground">{selectedPm.deskripsi}</p>}
                 </div>
-              )}
-            </div>
-
-            {!qris && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
-                <QrCode className="h-4 w-4 flex-shrink-0" />
-                Scan QR-Code di atas untuk mentransfer dengan aplikasi e-wallet/m-banking favorit Anda.
+              )
+            ) : (
+              <div className="bg-white rounded-2xl p-4 border border-border/60 text-center">
+                <img src={qrisPlaceholder} alt="QRIS" className="w-full max-w-xs mx-auto" width={512} height={640} />
+                <p className="text-sm font-semibold mt-2 text-foreground">QRIS — Yayasan Teras Dakwah</p>
               </div>
             )}
 
