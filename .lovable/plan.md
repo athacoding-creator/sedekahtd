@@ -1,83 +1,68 @@
-# Rencana: Analytics per Campaign + FB Pixel per Campaign
+# Rencana Perbaikan & Pengembangan
 
-Ya, semuanya bisa diimplementasikan. Berikut rencananya.
+Tiga hal akan dikerjakan:
 
-## 1. Database (migrasi baru)
+## 1. Tombol "Bagikan" di Halaman Detail Campaign
+**Masalah:** Tombolnya ada tapi tidak melakukan apapun (tidak ada `onClick`).
 
-**Tambah kolom di `campaigns`:**
-- `fb_pixel_id` (text, nullable) — ID FB Pixel khusus campaign tsb
+**Solusi:**
+- Pakai Web Share API (`navigator.share`) jika tersedia (otomatis muncul di mobile: WhatsApp, IG, Telegram, dll).
+- Fallback otomatis ke copy link ke clipboard + tampil toast "Link disalin" jika perangkat tidak mendukung share native (mis. desktop Chrome).
+- Konten share: judul campaign + URL halaman.
 
-**Tabel baru `campaign_visits`** untuk tracking kunjungan:
-- `id` uuid PK
-- `campaign_id` uuid → campaigns
-- `visitor_id` text (anonim, disimpan di localStorage)
-- `ip_hash` text (nullable)
-- `user_agent` text
-- `referrer` text
-- `created_at` timestamptz
+## 2. Tabel Donasi Overflow di Mobile (Admin)
+**Masalah:** Pada layar HP, area tabel di `/admin/donations` melebar ke kanan dan ikut menggeser layout lain.
 
-RLS:
-- Public boleh INSERT (tracking dari browser)
-- Hanya admin boleh SELECT (data analytics)
+**Solusi:**
+- Bungkus container tabel dengan `min-w-0` + `max-w-full` agar `overflow-x-auto` benar-benar bekerja.
+- Pastikan parent (`AdminLayout > main`) tidak memaksa lebar minimum.
+- Tetap bisa di-scroll horizontal di dalam card-nya saja, tidak menggeser halaman.
 
-Index pada `campaign_id, created_at` untuk query cepat.
+## 3. "Kelola QRIS" → "Kelola Pembayaran" (Multi-Metode)
+Sekarang campaign hanya bisa pakai 1 QRIS. Akan diubah jadi sistem **metode pembayaran** yang fleksibel.
 
-## 2. Tracking Otomatis di Halaman Campaign
+### Perubahan Database
+- Buat tabel baru `payment_methods` menggantikan peran `qris_list`:
+  - `nama` (mis. "QRIS Yayasan", "BSI 7012345678", "GoPay 0853xxx")
+  - `tipe` — pilihan: `qris`, `bank_transfer`, `gopay`, `shopeepay`, `dana`, `ovo`, `lainnya`
+  - `nomor_rekening` (untuk transfer bank / e-wallet, opsional)
+  - `nama_pemilik` (atas nama, opsional)
+  - `gambar_url` (untuk QRIS, opsional untuk yang lain)
+  - `deskripsi`, `aktif`, `urutan`
+- Tabel jembatan `campaign_payment_methods` (campaign_id, payment_method_id) → 1 campaign bisa pakai BANYAK metode.
+- Migrasi data lama dari `qris_list` ke `payment_methods` (tipe `qris`) dan `campaigns.qris_id` lama ke tabel jembatan otomatis, supaya tidak ada data hilang.
+- RLS: publik bisa baca metode aktif, hanya admin bisa kelola.
 
-Di `CampaignDetail.tsx`:
-- Saat halaman dibuka → INSERT 1 baris ke `campaign_visits` (dengan visitor_id dari localStorage agar bisa hitung unique vs total).
-- Inject FB Pixel script dinamis berdasarkan `campaign.fb_pixel_id` (jika ada). Fire event `PageView` saat masuk, `Lead`/`InitiateCheckout` saat klik "Sedekah Sekarang".
-- Di `Donate.tsx` → fire `Purchase` setelah submit donasi.
+### Perubahan Admin
+- **Menu sidebar:** "Kelola QRIS" → **"Kelola Pembayaran"** (route `/admin/payments`).
+- **Halaman baru `AdminPayments.tsx`:**
+  - Tab/filter berdasar tipe (Semua / QRIS / Bank / E-wallet).
+  - Form tambah/edit dinamis sesuai tipe:
+    - Tipe **QRIS** → wajib upload gambar.
+    - Tipe **Bank/E-wallet** → wajib nomor rekening + atas nama, gambar opsional (logo).
+  - Toggle aktif/nonaktif, urutan, hapus (dengan pengecekan apakah dipakai campaign).
+- **`AdminCampaigns.tsx`:** dropdown QRIS tunggal diganti **multi-select metode pembayaran** dengan checklist (QRIS Yayasan ☑, BSI ☑, GoPay ☐, …).
 
-FB Pixel di-load via `<script>` injection di `useEffect`, di-cleanup saat unmount supaya pixel beda campaign tidak bocor.
+### Perubahan Donatur
+- **`Donate.tsx`:** donatur memilih dari **daftar metode pembayaran yang diaktifkan campaign** (cards dengan icon per tipe).
+  - Klik QRIS → tampil gambar QR untuk discan.
+  - Klik Bank/E-wallet → tampil nomor rekening + tombol "Salin Nomor" + atas nama.
+  - Lalu lanjut ke step upload bukti seperti sekarang.
+- Field `metode_pembayaran` di donations diisi otomatis sesuai pilihan (mis. `BSI - 7012345678 a.n. Yayasan Teras Dakwah`).
 
-## 3. Halaman Admin Analytics per Campaign
+## Detail Teknis (Singkat)
 
-**Route baru:** `/admin/campaigns/:id/analytics`
+```text
+payment_methods
+ ├─ id, nama, tipe, nomor_rekening?, nama_pemilik?
+ ├─ gambar_url?, deskripsi?, aktif, urutan
+campaign_payment_methods (junction)
+ ├─ campaign_id, payment_method_id
+```
 
-Diakses via tombol "Lihat Analytics" pada tiap row di `AdminCampaigns`.
-
-Konten halaman (mirip screenshot referensi):
-
-- **Header:** thumbnail + judul campaign
-- **Stat cards:**
-  - Total Kunjungan (count `campaign_visits`)
-  - Total Donatur (unique nama dari `donations` verified)
-  - Mengisi Data (count `donations` semua status)
-  - Jumlah Transaksi (count `donations` verified)
-  - Jumlah Donasi (sum nominal verified) → format Rupiah
-  - Persentase Donasi (verified / pengisi data × 100%)
-- **Chart 1 — Total donasi per hari** (count transaksi per tanggal): line chart pakai `recharts` (sudah tersedia).
-- **Chart 2 — Jumlah donasi per hari** (sum nominal per tanggal): line chart.
-- **Filter rentang tanggal** (default 30 hari terakhir).
-- **Tabel donatur** untuk campaign ini: tanggal, nama, nominal, status.
-- Realtime subscribe ke `donations` & `campaign_visits` untuk auto-refresh.
-
-## 4. Form CRUD Campaign
-
-Di `AdminCampaigns.tsx` form edit/create → tambah field input **"Facebook Pixel ID"** (opsional). Helper text: "Kosongkan jika tidak pakai pixel khusus."
-
-## 5. Catatan Teknis
-
-- FB Pixel ID disimpan plain text di DB (bukan secret) — memang aman karena pixel ID public.
-- `visitor_id` digenerate di client (`crypto.randomUUID()`) lalu disimpan di `localStorage` agar repeat-visit bisa dideteksi.
-- Tracking visit hanya fire 1x per session per campaign (pakai `sessionStorage` flag) agar tidak inflate karena re-render.
-- Library chart: `recharts` (sudah ada di shadcn `chart.tsx`).
-
-## File yang akan dibuat/diubah
-
-**Baru:**
-- `src/pages/AdminCampaignAnalytics.tsx`
-- `src/lib/tracking.ts` (helper visit + FB Pixel inject)
-
-**Diubah:**
-- `src/App.tsx` — route analytics
-- `src/pages/CampaignDetail.tsx` — fire visit + load pixel
-- `src/pages/Donate.tsx` — fire FB Pixel Purchase event
-- `src/pages/AdminCampaigns.tsx` — input FB Pixel ID + tombol Analytics
-
-**Migrasi DB:**
-- ALTER `campaigns` add `fb_pixel_id`
-- CREATE `campaign_visits` + RLS + index
+File yang akan dibuat/diubah:
+- **Baru:** `src/pages/AdminPayments.tsx`
+- **Diubah:** `src/App.tsx` (route + redirect /admin/qris → /admin/payments), `src/pages/Admin.tsx` (label menu), `src/pages/AdminCampaigns.tsx` (multi-select), `src/pages/Donate.tsx` (pilih metode), `src/pages/CampaignDetail.tsx` (Bagikan), `src/pages/AdminDonations.tsx` (fix overflow mobile).
+- **Migrasi DB:** buat 2 tabel baru, copy data dari `qris_list`, RLS policies. `qris_list` lama tetap dipertahankan dulu (read-only) supaya aman, bisa dihapus belakangan.
 
 Setujui untuk saya mulai implementasi?

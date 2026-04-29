@@ -47,9 +47,13 @@ export type Database = {
           deskripsi: string
           fb_pixel_id: string | null
           gambar_url: string | null
+          harga_paket: number | null
           id: string
+          is_pilihan: boolean
+          jenis_campaign: string
           judul: string
           kategori: string | null
+          nama_paket: string | null
           qris_id: string | null
           target: number
           terkumpul: number
@@ -60,9 +64,13 @@ export type Database = {
           deskripsi: string
           fb_pixel_id?: string | null
           gambar_url?: string | null
+          harga_paket?: number | null
           id?: string
+          is_pilihan?: boolean
+          jenis_campaign?: string
           judul: string
           kategori?: string | null
+          nama_paket?: string | null
           qris_id?: string | null
           target?: number
           terkumpul?: number
@@ -73,9 +81,13 @@ export type Database = {
           deskripsi?: string
           fb_pixel_id?: string | null
           gambar_url?: string | null
+          harga_paket?: number | null
           id?: string
+          is_pilihan?: boolean
+          jenis_campaign?: string
           judul?: string
           kategori?: string | null
+          nama_paket?: string | null
           qris_id?: string | null
           target?: number
           terkumpul?: number
