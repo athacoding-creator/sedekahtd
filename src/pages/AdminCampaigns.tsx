@@ -118,6 +118,7 @@ const AdminCampaigns = () => {
       toast.error("Judul & deskripsi wajib diisi"); return;
     }
     if (form.target <= 0) { toast.error("Target donasi harus lebih dari 0"); return; }
+    if (form.payment_method_ids.length === 0) { toast.error("Pilih minimal 1 metode pembayaran"); return; }
 
     setSaving(true);
     try {
