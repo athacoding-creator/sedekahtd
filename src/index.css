@@ -6,92 +6,86 @@
 
 @layer base {
   :root {
-    /* F7F3F0 Parchment — background utama */
-    --background: 30 27% 96%;
-    --foreground: 215 50% 12%;
+    --background: 210 40% 98%;
+    --foreground: 215 35% 12%;
 
-    /* FDFCFC White — card/surface */
-    --card: 0 0% 99%;
-    --card-foreground: 215 50% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 35% 12%;
 
-    --popover: 0 0% 99%;
-    --popover-foreground: 215 50% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 35% 12%;
 
-    /* 0F1D34 Prussian Blue — primary/tombol utama */
-    --primary: 215 65% 13%;
+    /* Biru cerah ala Teras Dakwah */
+    --primary: 201 96% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 215 70% 8%;
+    --primary-dark: 211 90% 30%;
 
-    --secondary: 30 20% 92%;
-    --secondary-foreground: 215 50% 18%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 35% 18%;
 
-    --muted: 30 15% 90%;
+    --muted: 210 30% 94%;
     --muted-foreground: 215 18% 48%;
 
-    /* 0B6E4F Dark Emerald — accent (ganti kuning) */
-    --accent: 158 82% 24%;
-    --accent-foreground: 0 0% 100%;
+    /* Kuning accent untuk tombol "SEDEKAH SEKARANG" */
+    --accent: 48 100% 52%;
+    --accent-foreground: 215 50% 12%;
 
     /* Hijau untuk progress bar */
-    --progress: 158 82% 24%;
+    --progress: 142 65% 42%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 158 82% 24%;
+    --success: 142 70% 40%;
     --warning: 38 92% 50%;
 
-    --border: 30 20% 86%;
-    --input: 30 20% 90%;
-
-    /* 71A9F7 Quiet Horizon — ring/focus */
-    --ring: 215 87% 71%;
+    --border: 210 28% 88%;
+    --input: 210 28% 92%;
+    --ring: 201 96% 42%;
 
     --radius: 0.875rem;
 
-    /* 0F1D34 Prussian Blue gradient */
-    --gradient-banner: linear-gradient(135deg, hsl(215 65% 13%), hsl(215 55% 22%));
-    --gradient-soft: linear-gradient(180deg, hsl(30 27% 96%), hsl(30 20% 92%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 99%), hsl(30 27% 96%));
+    --gradient-banner: linear-gradient(135deg, hsl(201 96% 42%), hsl(195 95% 52%));
+    --gradient-soft: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 95%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
 
-    --shadow-soft: 0 2px 16px -4px hsl(215 65% 13% / 0.10), 0 1px 4px -1px hsl(215 65% 13% / 0.06);
-    --shadow-card: 0 8px 32px -8px hsl(215 65% 13% / 0.18), 0 2px 8px -2px hsl(215 65% 13% / 0.08);
-    --shadow-card-hover: 0 16px 48px -12px hsl(215 65% 13% / 0.24), 0 4px 12px -4px hsl(215 65% 13% / 0.12);
-    /* shadow tombol pakai emerald */
-    --shadow-button: 0 4px 18px -4px hsl(158 82% 24% / 0.50);
-    --shadow-blue: 0 4px 20px -4px hsl(215 87% 71% / 0.45);
-    --shadow-header: 0 2px 20px -4px hsl(215 65% 13% / 0.12);
+    --shadow-soft: 0 2px 16px -4px hsl(201 60% 25% / 0.10), 0 1px 4px -1px hsl(201 60% 25% / 0.06);
+    --shadow-card: 0 8px 32px -8px hsl(201 60% 25% / 0.18), 0 2px 8px -2px hsl(201 60% 25% / 0.08);
+    --shadow-card-hover: 0 16px 48px -12px hsl(201 60% 25% / 0.24), 0 4px 12px -4px hsl(201 60% 25% / 0.12);
+    --shadow-button: 0 4px 18px -4px hsl(48 100% 50% / 0.55);
+    --shadow-blue: 0 4px 20px -4px hsl(201 96% 42% / 0.45);
+    --shadow-header: 0 2px 20px -4px hsl(201 60% 25% / 0.12);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 30 27% 96%;
-    --sidebar-foreground: 215 50% 18%;
-    --sidebar-primary: 215 65% 13%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 20% 92%;
-    --sidebar-accent-foreground: 215 50% 18%;
-    --sidebar-border: 30 20% 86%;
-    --sidebar-ring: 215 87% 71%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 215 50% 8%;
-    --foreground: 30 20% 95%;
-    --card: 215 50% 11%;
-    --card-foreground: 30 20% 95%;
-    --popover: 215 50% 11%;
-    --popover-foreground: 30 20% 95%;
-    --primary: 215 65% 13%;
+    --background: 215 35% 8%;
+    --foreground: 200 30% 95%;
+    --card: 215 35% 11%;
+    --card-foreground: 200 30% 95%;
+    --popover: 215 35% 11%;
+    --popover-foreground: 200 30% 95%;
+    --primary: 201 96% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 40% 18%;
-    --secondary-foreground: 30 20% 95%;
-    --muted: 215 40% 18%;
-    --muted-foreground: 30 15% 65%;
-    --accent: 158 70% 35%;
-    --accent-foreground: 0 0% 100%;
-    --border: 215 35% 20%;
-    --input: 215 35% 20%;
-    --ring: 215 87% 71%;
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 200 30% 95%;
+    --muted: 215 30% 18%;
+    --muted-foreground: 200 15% 65%;
+    --accent: 48 100% 55%;
+    --accent-foreground: 215 50% 15%;
+    --border: 215 30% 20%;
+    --input: 215 30% 20%;
+    --ring: 201 96% 55%;
   }
 }
 
