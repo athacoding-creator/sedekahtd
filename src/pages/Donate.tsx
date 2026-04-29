@@ -279,6 +279,56 @@ const Donate = () => {
               </button>
             </div>
 
+            {/* Tutorial cara bayar */}
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">?</span>
+                </div>
+                <span className="text-sm font-bold text-blue-800">Cara Melakukan Pembayaran</span>
+              </div>
+
+              {selectedPm && isQrisType(selectedPm.tipe) ? (
+                // Tutorial QRIS
+                <ol className="space-y-2">
+                  {[
+                    "Buka aplikasi m-banking atau e-wallet (GoPay, OVO, Dana, ShopeePay, dll.)",
+                    "Pilih menu \"Scan QR\" atau \"Bayar\" lalu arahkan kamera ke QR Code di atas.",
+                    "Masukkan nominal donasi sesuai yang tertera, lalu konfirmasi pembayaran.",
+                    "Setelah berhasil, simpan screenshot/bukti pembayaran dari aplikasi Anda.",
+                    "Upload bukti pembayaran di kolom di bawah ini, lalu klik Konfirmasi Pembayaran.",
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-xs text-blue-800">
+                      <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-[10px]">{i + 1}</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                // Tutorial Transfer Bank
+                <ol className="space-y-2">
+                  {[
+                    `Buka aplikasi m-banking atau datang langsung ke ATM/teller bank Anda.`,
+                    `Pilih menu "Transfer" lalu masukkan nomor rekening tujuan yang tertera di atas.`,
+                    `Masukkan nominal donasi sesuai yang tertera, pastikan nominalnya tepat.`,
+                    `Cek kembali nama penerima sebelum konfirmasi — pastikan sudah benar.`,
+                    `Setelah transfer berhasil, simpan struk/screenshot bukti transfer.`,
+                    `Upload bukti transfer di kolom di bawah ini, lalu klik Konfirmasi Pembayaran.`,
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-xs text-blue-800">
+                      <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-[10px]">{i + 1}</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              <div className="flex items-start gap-2 pt-1 border-t border-blue-200 mt-2">
+                <span className="text-blue-500 text-sm flex-shrink-0">💡</span>
+                <p className="text-[11px] text-blue-700">Donasi Anda akan diverifikasi admin dalam 1×24 jam. Jika ada kendala, hubungi kami via tombol <strong>Tanya Program</strong> di atas.</p>
+              </div>
+            </div>
+
             {/* Upload bukti */}
             <div>
               <label className="block text-sm font-semibold mb-2">Konfirmasi Pembayaran</label>
