@@ -92,7 +92,7 @@ const AdminCampaigns = () => {
       kategori: c.kategori ?? "",
       target: c.target,
       gambar_url: c.gambar_url ?? "",
-      qris_id: c.qris_id ?? "",
+      payment_method_ids: campaignPayments[c.id] ?? [],
       fb_pixel_id: c.fb_pixel_id ?? "",
       is_pilihan: c.is_pilihan ?? false,
       jenis_campaign: c.jenis_campaign ?? "uang",
@@ -128,7 +128,7 @@ const AdminCampaigns = () => {
         kategori: form.kategori.trim() || null,
         target: Number(form.target),
         gambar_url,
-        qris_id: form.qris_id || null,
+        qris_id: form.payment_method_ids[0] || null, // legacy: simpan id pertama untuk kompatibilitas
         fb_pixel_id: form.fb_pixel_id.trim() || null,
         is_pilihan: form.is_pilihan,
         jenis_campaign: form.jenis_campaign,
@@ -136,14 +136,26 @@ const AdminCampaigns = () => {
         harga_paket: form.jenis_campaign === "paket" ? (Number(form.harga_paket) || null) : null,
       };
 
+      let campaignId: string | null = editing?.id ?? null;
       if (editing) {
         const { error } = await (supabase as any).from("campaigns").update(payload).eq("id", editing.id);
         if (error) throw error;
         toast.success("Campaign diperbarui");
       } else {
-        const { error } = await (supabase as any).from("campaigns").insert(payload);
+        const { data: ins, error } = await (supabase as any).from("campaigns").insert(payload).select("id").single();
         if (error) throw error;
+        campaignId = ins?.id ?? null;
         toast.success("Campaign ditambahkan");
+      }
+
+      // Sync junction table campaign_payment_methods
+      if (campaignId) {
+        await (supabase as any).from("campaign_payment_methods").delete().eq("campaign_id", campaignId);
+        if (form.payment_method_ids.length > 0) {
+          const rows = form.payment_method_ids.map(pid => ({ campaign_id: campaignId, payment_method_id: pid }));
+          const { error: jerr } = await (supabase as any).from("campaign_payment_methods").insert(rows);
+          if (jerr) throw jerr;
+        }
       }
       setOpen(false);
       load();
@@ -161,7 +173,14 @@ const AdminCampaigns = () => {
     else { toast.success("Campaign dihapus"); load(); }
   };
 
-  const selectedQris = qrisList.find(q => q.id === form.qris_id);
+  const togglePayment = (pid: string) => {
+    setForm(f => ({
+      ...f,
+      payment_method_ids: f.payment_method_ids.includes(pid)
+        ? f.payment_method_ids.filter(x => x !== pid)
+        : [...f.payment_method_ids, pid],
+    }));
+  };
 
   return (
     <AdminLayout
