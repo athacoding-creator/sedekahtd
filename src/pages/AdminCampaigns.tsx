@@ -211,7 +211,7 @@ const AdminCampaigns = () => {
                 <th className="px-4 py-3 font-bold">Gambar</th>
                 <th className="px-4 py-3 font-bold">Judul</th>
                 <th className="px-4 py-3 font-bold">Pilihan</th>
-                <th className="px-4 py-3 font-bold">QRIS</th>
+                <th className="px-4 py-3 font-bold">Pembayaran</th>
                 <th className="px-4 py-3 font-bold">Target</th>
                 <th className="px-4 py-3 font-bold">Terkumpul</th>
                 <th className="px-4 py-3 font-bold">Progress</th>
@@ -259,10 +259,14 @@ const AdminCampaigns = () => {
                       </button>
                     </td>
                     <td className="px-4 py-3">
-                      {qris ? (
-                        <div className="flex items-center gap-1.5">
-                          <img src={qris.gambar_url} alt={qris.nama} className="h-8 w-8 object-contain rounded border border-border bg-white p-0.5" />
-                          <span className="text-xs text-muted-foreground truncate max-w-[80px]">{qris.nama}</span>
+                      {pmList.length > 0 ? (
+                        <div className="flex items-center gap-1 flex-wrap max-w-[180px]">
+                          {pmList.slice(0, 3).map(pm => (
+                            <span key={pm.id} title={pm.nama} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">
+                              {pm.tipe === "qris" ? "QRIS" : pm.tipe === "bank_transfer" ? "BANK" : pm.tipe.toUpperCase()}
+                            </span>
+                          ))}
+                          {pmList.length > 3 && <span className="text-[10px] text-muted-foreground">+{pmList.length - 3}</span>}
                         </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-orange-500">
