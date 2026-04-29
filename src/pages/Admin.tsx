@@ -212,10 +212,10 @@ const Admin = () => {
             desc="Atur tampilan slider/banner di halaman utama"
           />
           <MenuCard
-            to="/admin/qris"
+            to="/admin/payments"
             icon={<QrCode className="h-6 w-6 text-primary" />}
             title="Kelola Pembayaran"
-            desc="Tambah dan kelola data Pembayaran untuk setiap campaign"
+            desc="QRIS, BSI, GoPay, ShopeePay, dan metode pembayaran lain"
           />
           <MenuCard
             to="/admin/storage"
