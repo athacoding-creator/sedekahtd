@@ -436,20 +436,50 @@ const Donate = () => {
           )}
 
           {/* Metode pembayaran */}
-          <div className="rounded-xl border border-border bg-background p-4">
-            <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
-            {qris ? (
-              <div className="flex items-center gap-3">
-                <img src={qris.gambar_url} alt={qris.nama} className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5" />
-                <div>
-                  <div className="font-semibold text-sm">{qris.nama}</div>
-                  {qris.deskripsi && <div className="text-xs text-muted-foreground">{qris.deskripsi}</div>}
-                </div>
+          {paymentMethods.length > 0 ? (
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-2">Metode Pembayaran</div>
+              <div className="space-y-2">
+                {paymentMethods.map(pm => {
+                  const Icon = tipeIcon(pm.tipe);
+                  const active = selectedPm?.id === pm.id;
+                  return (
+                    <button
+                      key={pm.id}
+                      type="button"
+                      onClick={() => setSelectedPm(pm)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-smooth text-left ${
+                        active ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40"
+                      }`}
+                    >
+                      {pm.gambar_url ? (
+                        <img src={pm.gambar_url} alt="" className="h-10 w-10 object-contain rounded-lg border border-border bg-white p-0.5" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{pm.nama}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {tipeLabel(pm.tipe)}
+                          {pm.nomor_rekening && ` · ${pm.nomor_rekening}`}
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${active ? "border-primary bg-primary" : "border-border"}`}>
+                        {active && <CheckCircle2 className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-background p-4">
+              <div className="text-xs text-muted-foreground mb-1">Metode Pembayaran</div>
               <div className="font-semibold">QRIS — Yayasan Teras Dakwah</div>
-            )}
-          </div>
+            </div>
+          )}
 
           <button
             onClick={goPay}
