@@ -84,7 +84,33 @@ const CampaignDetail = () => {
               <Heart className="h-4 w-4 fill-current" /> Sedekah Sekarang
             </Link>
 
-            <button className="mt-3 w-full px-6 py-3 rounded-2xl bg-secondary text-foreground font-semibold hover:bg-secondary/80 transition-smooth flex items-center justify-center gap-2">
+            <button
+              onClick={async () => {
+                const url = window.location.href;
+                const shareData = {
+                  title: c.judul,
+                  text: `Yuk bantu campaign: ${c.judul}`,
+                  url,
+                };
+                try {
+                  if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
+                    await navigator.share(shareData);
+                    return;
+                  }
+                } catch (err: any) {
+                  if (err?.name === "AbortError") return;
+                }
+                try {
+                  await navigator.clipboard.writeText(url);
+                  const { toast } = await import("sonner");
+                  toast.success("Link campaign disalin ke clipboard");
+                } catch {
+                  const { toast } = await import("sonner");
+                  toast.error("Gagal membagikan");
+                }
+              }}
+              className="mt-3 w-full px-6 py-3 rounded-2xl bg-secondary text-foreground font-semibold hover:bg-secondary/80 transition-smooth flex items-center justify-center gap-2"
+            >
               <Share2 className="h-4 w-4" /> Bagikan
             </button>
           </div>
