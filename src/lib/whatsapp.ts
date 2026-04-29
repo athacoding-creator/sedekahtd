@@ -1,4 +1,4 @@
-export const WA_NUMBER = "6285320307766";
+export const WA_NUMBER = "6285111514040";
 
 export const buildWaConfirmUrl = (params: {
   nama: string;
