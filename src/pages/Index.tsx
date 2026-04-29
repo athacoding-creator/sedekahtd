@@ -278,7 +278,7 @@ const Index = () => {
             {/* Scroller */}
             {programPilihan.length === 0 ? (
               <div className="text-center py-10 text-sm text-slate-400 bg-white rounded-2xl border border-slate-100">
-                Belum ada program pilihan. Tandai campaign di admin panel.
+                Belum ada program pilihan untuk saat ini.
               </div>
             ) : (
             <div

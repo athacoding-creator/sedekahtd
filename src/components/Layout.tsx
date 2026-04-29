@@ -16,7 +16,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => (
             />
           </Link>
           <a
-            href="https://wa.me/6285320307766"
+            href="https://wa.me/6285111514040"
             target="_blank"
             rel="noreferrer"
             className="px-3.5 py-2 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-blue hover:bg-primary-dark transition-smooth flex items-center gap-1.5 tracking-wide"
