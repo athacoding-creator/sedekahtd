@@ -5,27 +5,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus, Landmark, Wallet, CreditCard } from "lucide-react";
 import { z } from "zod";
 import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
 import { loadFbPixel, fbTrack } from "@/lib/tracking";
 
-type QrisData = {
+type PaymentMethod = {
   id: string;
   nama: string;
-  gambar_url: string;
+  tipe: "qris" | "bank_transfer" | "gopay" | "shopeepay" | "dana" | "ovo" | "lainnya";
+  nomor_rekening: string | null;
+  nama_pemilik: string | null;
+  gambar_url: string | null;
   deskripsi: string | null;
+  aktif: boolean;
 };
 
-type CampaignWithQris = Campaign & {
-  qris_id: string | null;
-  qris_list: QrisData | null;
+type CampaignWithPayments = Campaign & {
   fb_pixel_id?: string | null;
   jenis_campaign: string;
   nama_paket: string | null;
   harga_paket: number | null;
 };
+
+const isQrisType = (t: PaymentMethod["tipe"]) => t === "qris";
+const tipeLabel = (t: PaymentMethod["tipe"]) =>
+  ({ qris: "QRIS", bank_transfer: "Transfer Bank", gopay: "GoPay", shopeepay: "ShopeePay", dana: "DANA", ovo: "OVO", lainnya: "Lainnya" }[t]);
+const tipeIcon = (t: PaymentMethod["tipe"]) => isQrisType(t) ? QrCode : t === "bank_transfer" ? Landmark : ["gopay","shopeepay","dana","ovo"].includes(t) ? Wallet : CreditCard;
 
 const schema = z.object({
   nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
@@ -37,7 +44,9 @@ const nominalQuick = [25000, 50000, 100000, 250000, 500000, 1000000];
 const Donate = () => {
   const { id } = useParams();
   const nav = useNavigate();
-  const [campaign, setCampaign] = useState<CampaignWithQris | null>(null);
+  const [campaign, setCampaign] = useState<CampaignWithPayments | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedPm, setSelectedPm] = useState<PaymentMethod | null>(null);
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [nominal, setNominal] = useState<string>("");
@@ -48,20 +57,31 @@ const Donate = () => {
 
   useEffect(() => {
     if (!id) return;
-    (supabase as any)
-      .from("campaigns")
-      .select("*, qris_list(id, nama, gambar_url, deskripsi)")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }: any) => {
-        const c = data as CampaignWithQris;
-        setCampaign(c);
-        if (c?.fb_pixel_id) loadFbPixel(c.fb_pixel_id);
-        // Jika paket, set nominal otomatis
-        if (c?.jenis_campaign === "paket" && c.harga_paket) {
-          setNominal(String(c.harga_paket));
-        }
-      });
+    (async () => {
+      const { data: c } = await (supabase as any).from("campaigns").select("*").eq("id", id).maybeSingle();
+      if (!c) return;
+      setCampaign(c as CampaignWithPayments);
+      if ((c as any).fb_pixel_id) loadFbPixel((c as any).fb_pixel_id);
+      if (c.jenis_campaign === "paket" && c.harga_paket) setNominal(String(c.harga_paket));
+
+      // Load payment methods linked to this campaign
+      const { data: links } = await (supabase as any)
+        .from("campaign_payment_methods")
+        .select("payment_method_id")
+        .eq("campaign_id", id);
+      const ids = (links ?? []).map((l: any) => l.payment_method_id);
+      if (ids.length > 0) {
+        const { data: pms } = await (supabase as any)
+          .from("payment_methods")
+          .select("*")
+          .in("id", ids)
+          .eq("aktif", true)
+          .order("urutan");
+        const list = (pms as PaymentMethod[]) ?? [];
+        setPaymentMethods(list);
+        if (list.length > 0) setSelectedPm(list[0]);
+      }
+    })();
   }, [id]);
 
   const isPaket = campaign?.jenis_campaign === "paket";
