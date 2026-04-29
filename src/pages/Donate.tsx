@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus, Landmark, Wallet, CreditCard } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus, Landmark, Wallet, CreditCard, Phone } from "lucide-react";
 import { z } from "zod";
 import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
@@ -37,6 +37,7 @@ const tipeIcon = (t: PaymentMethod["tipe"]) => isQrisType(t) ? QrCode : t === "b
 const schema = z.object({
   nama: z.string().trim().min(2, "Nama minimal 2 karakter").max(80),
   nominal: z.number().int().positive("Nominal harus lebih dari 0").max(1_000_000_000),
+  no_whatsapp: z.string().trim().min(9, "No. WhatsApp minimal 9 digit").max(15, "No. WhatsApp maksimal 15 digit").regex(/^[0-9]+$/, "No. WhatsApp hanya boleh berisi angka"),
 });
 
 const nominalQuick = [25000, 50000, 100000, 250000, 500000, 1000000];
@@ -49,6 +50,7 @@ const Donate = () => {
   const [selectedPm, setSelectedPm] = useState<PaymentMethod | null>(null);
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
+  const [noWa, setNoWa] = useState("");
   const [nominal, setNominal] = useState<string>("");
   const [jumlahPaket, setJumlahPaket] = useState(1);
   const [file, setFile] = useState<File | null>(null);
@@ -104,7 +106,7 @@ const Donate = () => {
   };
 
   const goPay = () => {
-    const parse = schema.safeParse({ nama, nominal: nominalFinal });
+    const parse = schema.safeParse({ nama, nominal: nominalFinal, no_whatsapp: noWa });
     if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
     setStep("pay");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -117,7 +119,7 @@ const Donate = () => {
 
   const submit = async () => {
     if (!file) { toast.error("Silakan upload bukti transfer"); return; }
-    const parse = schema.safeParse({ nama, nominal: nominalFinal });
+    const parse = schema.safeParse({ nama, nominal: nominalFinal, no_whatsapp: noWa });
     if (!parse.success) { toast.error(parse.error.issues[0].message); return; }
 
     setLoading(true);
@@ -131,6 +133,7 @@ const Donate = () => {
         campaign_id: id,
         nama: parse.data.nama,
         nominal: parse.data.nominal,
+        no_whatsapp: parse.data.no_whatsapp,
         metode_pembayaran: buildMetodeLabel(selectedPm),
         bukti_transfer: path,
         status: "pending",
@@ -330,6 +333,28 @@ const Donate = () => {
               placeholder="Nama lengkap (atau Hamba Allah)"
               className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
             />
+          </div>
+
+          {/* No. WhatsApp */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">
+              No. WhatsApp <span className="text-destructive">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span className="text-sm font-semibold">+62</span>
+              </div>
+              <input
+                type="tel"
+                value={noWa}
+                onChange={e => setNoWa(e.target.value.replace(/\D/g, ""))}
+                maxLength={15}
+                placeholder="8xxxxxxxxxx"
+                className="w-full pl-20 pr-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Digunakan admin untuk konfirmasi donasi Anda</p>
           </div>
 
           {/* ===== JENIS PAKET ===== */}
