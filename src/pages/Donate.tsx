@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/components/CampaignCard";
 import { formatRupiah } from "@/lib/format";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus, Landmark, Wallet, CreditCard, Phone } from "lucide-react";
+import { CheckCircle2, Loader2, Upload, Copy, ArrowLeft, QrCode, Package, Minus, Plus, Landmark, Wallet, CreditCard, Phone, ChevronDown } from "lucide-react";
 import { z } from "zod";
 import qrisPlaceholder from "@/assets/qris-placeholder.png";
 import { buildWaConfirmUrl } from "@/lib/whatsapp";
@@ -279,55 +279,8 @@ const Donate = () => {
               </button>
             </div>
 
-            {/* Tutorial cara bayar */}
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">?</span>
-                </div>
-                <span className="text-sm font-bold text-blue-800">Cara Melakukan Pembayaran</span>
-              </div>
-
-              {selectedPm && isQrisType(selectedPm.tipe) ? (
-                // Tutorial QRIS
-                <ol className="space-y-2">
-                  {[
-                    "Buka aplikasi m-banking atau e-wallet (GoPay, OVO, Dana, ShopeePay, dll.)",
-                    "Pilih menu \"Scan QR\" atau \"Bayar\" lalu arahkan kamera ke QR Code di atas.",
-                    "Masukkan nominal donasi sesuai yang tertera, lalu konfirmasi pembayaran.",
-                    "Setelah berhasil, simpan screenshot/bukti pembayaran dari aplikasi Anda.",
-                    "Upload bukti pembayaran di kolom di bawah ini, lalu klik Konfirmasi Pembayaran.",
-                  ].map((step, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-xs text-blue-800">
-                      <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-[10px]">{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                // Tutorial Transfer Bank
-                <ol className="space-y-2">
-                  {[
-                    `Buka aplikasi m-banking atau datang langsung ke ATM/teller bank Anda.`,
-                    `Pilih menu "Transfer" lalu masukkan nomor rekening tujuan yang tertera di atas.`,
-                    `Masukkan nominal donasi sesuai yang tertera, pastikan nominalnya tepat.`,
-                    `Cek kembali nama penerima sebelum konfirmasi — pastikan sudah benar.`,
-                    `Setelah transfer berhasil, simpan struk/screenshot bukti transfer.`,
-                    `Upload bukti transfer di kolom di bawah ini, lalu klik Konfirmasi Pembayaran.`,
-                  ].map((step, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-xs text-blue-800">
-                      <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-[10px]">{i + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              )}
-
-              <div className="flex items-start gap-2 pt-1 border-t border-blue-200 mt-2">
-                <span className="text-blue-500 text-sm flex-shrink-0">💡</span>
-                <p className="text-[11px] text-blue-700">Donasi Anda akan diverifikasi admin dalam 1×24 jam. Jika ada kendala, hubungi kami via tombol <strong>Tanya Program</strong> di atas.</p>
-              </div>
-            </div>
+            {/* Tutorial cara bayar — accordion */}
+            <TutorialBayar isQris={!!(selectedPm && isQrisType(selectedPm.tipe))} />
 
             {/* Upload bukti */}
             <div>
@@ -537,6 +490,106 @@ const Donate = () => {
         </div>
       </div>
     </Layout>
+  );
+};
+
+// Komponen accordion tutorial cara bayar
+const TutorialBayar = ({ isQris }: { isQris: boolean }) => {
+  const [open, setOpen] = useState<number | null>(null);
+
+  const items = isQris
+    ? [
+        {
+          title: "Cara Bayar via QRIS (Scan QR)",
+          steps: [
+            "Buka aplikasi m-banking atau e-wallet (GoPay, OVO, Dana, ShopeePay, dll.)",
+            'Pilih menu \"Scan QR\" atau \"Bayar\" lalu arahkan kamera ke QR Code di atas.',
+            "Masukkan nominal donasi sesuai yang tertera, lalu konfirmasi pembayaran.",
+            "Setelah berhasil, simpan screenshot/bukti pembayaran dari aplikasi Anda.",
+            "Upload bukti pembayaran di kolom di bawah, lalu klik Konfirmasi Pembayaran.",
+          ],
+        },
+        {
+          title: "Cara Bayar via QRIS (Mobile Banking)",
+          steps: [
+            "Buka aplikasi mobile banking Anda (BSI Mobile, BCA Mobile, dll.).",
+            'Pilih menu \"Scan QR\" atau \"QRIS\".',
+            "Arahkan kamera ke QR Code di atas hingga terbaca.",
+            "Periksa detail merchant, masukkan nominal donasi, lalu masukkan PIN.",
+            "Setelah berhasil, simpan screenshot notifikasi berhasil.",
+            "Upload bukti pembayaran di kolom di bawah, lalu klik Konfirmasi Pembayaran.",
+          ],
+        },
+      ]
+    : [
+        {
+          title: "Cara Transfer via Mobile Banking",
+          steps: [
+            "Buka aplikasi mobile banking Anda.",
+            'Pilih menu \"Transfer\" lalu pilih \"Transfer ke Bank Lain\" atau bank yang sesuai.',
+            "Masukkan nomor rekening tujuan yang tertera di atas.",
+            "Masukkan nominal donasi sesuai yang tertera, pastikan nominalnya tepat.",
+            "Cek kembali nama penerima sebelum konfirmasi — pastikan sudah benar.",
+            "Setelah berhasil, simpan screenshot bukti transfer.",
+            "Upload bukti transfer di kolom di bawah, lalu klik Konfirmasi Pembayaran.",
+          ],
+        },
+        {
+          title: "Cara Transfer via ATM",
+          steps: [
+            "Masukkan kartu ATM dan PIN Anda.",
+            'Pilih menu \"Transfer\" lalu pilih bank tujuan yang sesuai.',
+            "Masukkan nomor rekening tujuan yang tertera di atas.",
+            "Masukkan nominal donasi, lalu konfirmasi transaksi.",
+            "Ambil dan simpan struk ATM sebagai bukti transfer.",
+            "Foto struk tersebut, upload di kolom di bawah, lalu klik Konfirmasi Pembayaran.",
+          ],
+        },
+      ];
+
+  return (
+    <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-border">
+        <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+          <span className="text-primary-foreground text-[10px] font-bold">i</span>
+        </div>
+        <span className="text-sm font-bold">Instruksi Pembayaran</span>
+      </div>
+      {items.map((item, idx) => (
+        <div key={idx} className={idx > 0 ? "border-t border-border" : ""}>
+          <button
+            type="button"
+            onClick={() => setOpen(open === idx ? null : idx)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-smooth"
+          >
+            <span className="text-sm font-semibold">{item.title}</span>
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${
+                open === idx ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {open === idx && (
+            <div className="px-4 pb-4 bg-muted/20">
+              <ol className="space-y-2 mt-1">
+                {item.steps.map((step, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-xs text-foreground">
+                    <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-[10px]">
+                      {i + 1}
+                    </span>
+                    <span className="leading-relaxed">{step}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="flex items-start gap-2 mt-3 pt-3 border-t border-border">
+                <span className="text-xs flex-shrink-0">💡</span>
+                <p className="text-[11px] text-muted-foreground">Donasi Anda akan diverifikasi admin dalam 1×24 jam. Jika ada kendala, hubungi kami via tombol <strong>Tanya Program</strong> di header.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   );
 };
 
