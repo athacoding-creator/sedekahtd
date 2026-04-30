@@ -129,15 +129,7 @@ export type Database = {
           terkumpul?: number
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "campaigns_qris_id_fkey"
-            columns: ["qris_id"]
-            isOneToOne: false
-            referencedRelation: "qris_list"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       donations: {
         Row: {
@@ -147,6 +139,7 @@ export type Database = {
           id: string
           metode_pembayaran: string
           nama: string
+          no_whatsapp: string | null
           nominal: number
           pesan: string | null
           status: string
@@ -159,6 +152,7 @@ export type Database = {
           id?: string
           metode_pembayaran: string
           nama: string
+          no_whatsapp?: string | null
           nominal: number
           pesan?: string | null
           status?: string
@@ -171,6 +165,7 @@ export type Database = {
           id?: string
           metode_pembayaran?: string
           nama?: string
+          no_whatsapp?: string | null
           nominal?: number
           pesan?: string | null
           status?: string
