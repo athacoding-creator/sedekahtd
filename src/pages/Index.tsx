@@ -74,6 +74,9 @@ const Index = () => {
         setCampaigns(list);
         const total = list.reduce((a, b) => a + Number(b.terkumpul), 0);
         setStats(s => ({ ...s, total, aktif: list.length }));
+        // Build dynamic categories
+        const cats = Array.from(new Set(list.map(c => c.kategori).filter(Boolean))) as string[];
+        setKategoriList(["Semua", ...cats]);
       });
 
     supabase.from("public_donations").select("*").limit(50)
