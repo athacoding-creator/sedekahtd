@@ -8,7 +8,7 @@ import bannerHero from "@/assets/banner-hero.jpg";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import CountUp from "react-countup";
 
-const KATEGORI = ["Semua", "Sosial", "Kemanusiaan", "Pembangunan"];
+
 
 type PublicDonation = {
   id: string;
@@ -43,6 +43,7 @@ const Index = () => {
   const [showAllDonors, setShowAllDonors] = useState(false);
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
   const [searchQ, setSearchQ] = useState("");
+  const [kategoriList, setKategoriList] = useState<string[]>(["Semua"]);
   const [selectedKat, setSelectedKat] = useState("Semua");
 
   useEffect(() => {
@@ -73,13 +74,20 @@ const Index = () => {
         setCampaigns(list);
         const total = list.reduce((a, b) => a + Number(b.terkumpul), 0);
         setStats(s => ({ ...s, total, aktif: list.length }));
+        // Build dynamic categories
+        const cats = Array.from(new Set(list.map(c => c.kategori).filter(Boolean))) as string[];
+        setKategoriList(["Semua", ...cats]);
+      });
+
+    // Load donation count (exact) and recent donations
+    supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "verified")
+      .then(({ count }) => {
+        setStats(s => ({ ...s, jumlah: count ?? 0 }));
       });
 
     supabase.from("public_donations").select("*").limit(50)
       .then(({ data }) => {
-        const list = (data as PublicDonation[]) ?? [];
-        setDonations(list);
-        setStats(s => ({ ...s, jumlah: list.length }));
+        setDonations((data as PublicDonation[]) ?? []);
       });
 
     // Real-time: update campaign terkumpul & stats jumlah saat donasi diverifikasi
@@ -96,22 +104,16 @@ const Index = () => {
         });
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "donations" }, () => {
-        // Refresh jumlah donasi verified saat ada perubahan status
+        supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "verified")
+          .then(({ count }) => setStats(s => ({ ...s, jumlah: count ?? 0 })));
         supabase.from("public_donations").select("*").limit(50)
-          .then(({ data }) => {
-            const list = (data as PublicDonation[]) ?? [];
-            setDonations(list);
-            setStats(s => ({ ...s, jumlah: list.length }));
-          });
+          .then(({ data }) => setDonations((data as PublicDonation[]) ?? []));
       })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "donations" }, () => {
-        // Refresh saat ada donasi baru masuk
+        supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "verified")
+          .then(({ count }) => setStats(s => ({ ...s, jumlah: count ?? 0 })));
         supabase.from("public_donations").select("*").limit(50)
-          .then(({ data }) => {
-            const list = (data as PublicDonation[]) ?? [];
-            setDonations(list);
-            setStats(s => ({ ...s, jumlah: list.length }));
-          });
+          .then(({ data }) => setDonations((data as PublicDonation[]) ?? []));
       })
       .subscribe();
 
@@ -344,7 +346,7 @@ const Index = () => {
 
           {/* Filter kategori */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-5">
-            {KATEGORI.map(k => (
+            {kategoriList.map(k => (
               <button
                 key={k}
                 onClick={() => { setSelectedKat(k); setShowAllCampaigns(false); }}

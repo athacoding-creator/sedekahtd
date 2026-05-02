@@ -51,6 +51,7 @@ const Donate = () => {
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [noWa, setNoWa] = useState("");
+  const [pesan, setPesan] = useState("");
   const [nominal, setNominal] = useState<string>("");
   const [jumlahPaket, setJumlahPaket] = useState(1);
   const [file, setFile] = useState<File | null>(null);
@@ -134,6 +135,7 @@ const Donate = () => {
         nama: parse.data.nama,
         nominal: parse.data.nominal,
         no_whatsapp: parse.data.no_whatsapp,
+        pesan: pesan.trim() || null,
         metode_pembayaran: buildMetodeLabel(selectedPm),
         bukti_transfer: path,
         status: "pending",
@@ -434,6 +436,19 @@ const Donate = () => {
               </div>
             </div>
           )}
+
+          {/* Pesan / Doa */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Pesan / Doa <span className="text-muted-foreground font-normal">(opsional)</span></label>
+            <textarea
+              value={pesan}
+              onChange={e => setPesan(e.target.value)}
+              maxLength={300}
+              rows={3}
+              placeholder="Semoga bermanfaat..."
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth resize-none"
+            />
+          </div>
 
           {/* Metode pembayaran */}
           {paymentMethods.length > 0 ? (

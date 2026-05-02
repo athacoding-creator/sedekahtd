@@ -13,7 +13,7 @@ import AdminCampaigns from "./pages/AdminCampaigns.tsx";
 import AdminCampaignAnalytics from "./pages/AdminCampaignAnalytics.tsx";
 import AdminDonations from "./pages/AdminDonations.tsx";
 import AdminHeroes from "./pages/AdminHeroes.tsx";
-import AdminQris from "./pages/AdminQris.tsx";
+
 import AdminPayments from "./pages/AdminPayments.tsx";
 import AdminStorage from "./pages/AdminStorage.tsx";
 import AdminSettings from "./pages/AdminSettings.tsx";
@@ -39,7 +39,7 @@ const App = () => (
           <Route path="/admin/campaigns/:id/analytics" element={<AdminCampaignAnalytics />} />
           <Route path="/admin/donations" element={<AdminDonations />} />
           <Route path="/admin/heroes" element={<AdminHeroes />} />
-          <Route path="/admin/qris" element={<AdminQris />} />
+          
           <Route path="/admin/payments" element={<AdminPayments />} />
           <Route path="/admin/storage" element={<AdminStorage />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
