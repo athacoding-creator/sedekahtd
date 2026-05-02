@@ -8,7 +8,7 @@ import bannerHero from "@/assets/banner-hero.jpg";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import CountUp from "react-countup";
 
-const DEFAULT_KATEGORI = ["Semua"];
+
 
 type PublicDonation = {
   id: string;
