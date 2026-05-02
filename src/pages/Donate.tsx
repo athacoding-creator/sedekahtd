@@ -51,6 +51,7 @@ const Donate = () => {
   const [step, setStep] = useState<"form" | "pay">("form");
   const [nama, setNama] = useState("");
   const [noWa, setNoWa] = useState("");
+  const [pesan, setPesan] = useState("");
   const [nominal, setNominal] = useState<string>("");
   const [jumlahPaket, setJumlahPaket] = useState(1);
   const [file, setFile] = useState<File | null>(null);
