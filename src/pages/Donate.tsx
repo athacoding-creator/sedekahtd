@@ -437,6 +437,19 @@ const Donate = () => {
             </div>
           )}
 
+          {/* Pesan / Doa */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Pesan / Doa <span className="text-muted-foreground font-normal">(opsional)</span></label>
+            <textarea
+              value={pesan}
+              onChange={e => setPesan(e.target.value)}
+              maxLength={300}
+              rows={3}
+              placeholder="Semoga bermanfaat..."
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth resize-none"
+            />
+          </div>
+
           {/* Metode pembayaran */}
           {paymentMethods.length > 0 ? (
             <div>
