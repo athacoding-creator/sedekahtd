@@ -43,6 +43,7 @@ const Index = () => {
   const [showAllDonors, setShowAllDonors] = useState(false);
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
   const [searchQ, setSearchQ] = useState("");
+  const [kategoriList, setKategoriList] = useState<string[]>(["Semua"]);
   const [selectedKat, setSelectedKat] = useState("Semua");
 
   useEffect(() => {
