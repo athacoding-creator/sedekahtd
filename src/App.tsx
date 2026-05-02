@@ -13,7 +13,7 @@ import AdminCampaigns from "./pages/AdminCampaigns.tsx";
 import AdminCampaignAnalytics from "./pages/AdminCampaignAnalytics.tsx";
 import AdminDonations from "./pages/AdminDonations.tsx";
 import AdminHeroes from "./pages/AdminHeroes.tsx";
-import AdminQris from "./pages/AdminQris.tsx";
+
 import AdminPayments from "./pages/AdminPayments.tsx";
 import AdminStorage from "./pages/AdminStorage.tsx";
 import AdminSettings from "./pages/AdminSettings.tsx";
