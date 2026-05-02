@@ -48,6 +48,20 @@ export type Database = {
             referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_cpm_campaign"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cpm_payment_method"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
         ]
       }
       campaign_visits: {
@@ -75,7 +89,15 @@ export type Database = {
           user_agent?: string | null
           visitor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_visits_campaign"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaigns: {
         Row: {
@@ -174,6 +196,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_donations_campaign"
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
@@ -349,6 +378,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_donations_campaign"
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
