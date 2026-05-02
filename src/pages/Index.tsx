@@ -79,11 +79,15 @@ const Index = () => {
         setKategoriList(["Semua", ...cats]);
       });
 
+    // Load donation count (exact) and recent donations
+    supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "verified")
+      .then(({ count }) => {
+        setStats(s => ({ ...s, jumlah: count ?? 0 }));
+      });
+
     supabase.from("public_donations").select("*").limit(50)
       .then(({ data }) => {
-        const list = (data as PublicDonation[]) ?? [];
-        setDonations(list);
-        setStats(s => ({ ...s, jumlah: list.length }));
+        setDonations((data as PublicDonation[]) ?? []);
       });
 
     // Real-time: update campaign terkumpul & stats jumlah saat donasi diverifikasi
