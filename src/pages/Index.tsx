@@ -104,22 +104,16 @@ const Index = () => {
         });
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "donations" }, () => {
-        // Refresh jumlah donasi verified saat ada perubahan status
+        supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "verified")
+          .then(({ count }) => setStats(s => ({ ...s, jumlah: count ?? 0 })));
         supabase.from("public_donations").select("*").limit(50)
-          .then(({ data }) => {
-            const list = (data as PublicDonation[]) ?? [];
-            setDonations(list);
-            setStats(s => ({ ...s, jumlah: list.length }));
-          });
+          .then(({ data }) => setDonations((data as PublicDonation[]) ?? []));
       })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "donations" }, () => {
-        // Refresh saat ada donasi baru masuk
+        supabase.from("donations").select("id", { count: "exact", head: true }).eq("status", "verified")
+          .then(({ count }) => setStats(s => ({ ...s, jumlah: count ?? 0 })));
         supabase.from("public_donations").select("*").limit(50)
-          .then(({ data }) => {
-            const list = (data as PublicDonation[]) ?? [];
-            setDonations(list);
-            setStats(s => ({ ...s, jumlah: list.length }));
-          });
+          .then(({ data }) => setDonations((data as PublicDonation[]) ?? []));
       })
       .subscribe();
 
