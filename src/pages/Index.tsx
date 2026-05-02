@@ -346,7 +346,7 @@ const Index = () => {
 
           {/* Filter kategori */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-5">
-            {KATEGORI.map(k => (
+            {kategoriList.map(k => (
               <button
                 key={k}
                 onClick={() => { setSelectedKat(k); setShowAllCampaigns(false); }}
