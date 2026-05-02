@@ -135,6 +135,7 @@ const Donate = () => {
         nama: parse.data.nama,
         nominal: parse.data.nominal,
         no_whatsapp: parse.data.no_whatsapp,
+        pesan: pesan.trim() || null,
         metode_pembayaran: buildMetodeLabel(selectedPm),
         bukti_transfer: path,
         status: "pending",
