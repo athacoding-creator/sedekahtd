@@ -15,7 +15,8 @@ export type Campaign = {
 
 /** Card style Teras Dakwah: gambar atas, info bawah, progress hijau */
 export const CampaignCard = ({ c, index = 0 }: { c: Campaign; index?: number }) => {
-  const pct = Math.min(100, Math.round((c.terkumpul / Math.max(1, c.target)) * 100));
+  const isUnlimited = c.target === 0;
+  const pct = isUnlimited ? 0 : Math.min(100, Math.round((c.terkumpul / Math.max(1, c.target)) * 100));
   return (
     <Link
       to={`/campaign/${c.id}`}
@@ -47,16 +48,23 @@ export const CampaignCard = ({ c, index = 0 }: { c: Campaign; index?: number }) 
             </div>
           </div>
           <div className="space-y-1.5">
-            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center text-[10px]">
-              <span className="text-slate-400 font-medium">{pct}% tercapai</span>
-              <span className="text-slate-400">dari {formatRupiah(c.target).replace("Rp ", "Rp")}</span>
-            </div>
+            {!isUnlimited && (
+              <>
+                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400 font-medium">{pct}% tercapai</span>
+                  <span className="text-slate-400">dari {formatRupiah(c.target).replace("Rp ", "Rp")}</span>
+                </div>
+              </>
+            )}
+            {isUnlimited && (
+              <div className="text-[10px] text-slate-400 font-medium">Target: Tak Terbatas</div>
+            )}
           </div>
         </div>
       </div>

@@ -35,7 +35,8 @@ const CampaignDetail = () => {
 
   if (!c) return <Layout><div className="container py-20 text-center text-muted-foreground">Memuat...</div></Layout>;
 
-  const pct = Math.min(100, Math.round((c.terkumpul / Math.max(1, c.target)) * 100));
+  const isUnlimited = c.target === 0;
+  const pct = isUnlimited ? 0 : Math.min(100, Math.round((c.terkumpul / Math.max(1, c.target)) * 100));
 
   return (
     <Layout>
@@ -72,11 +73,13 @@ const CampaignDetail = () => {
                   <div className="font-bold text-primary">{pct}%</div>
                 </div>
               </div>
-              <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-progress rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-              </div>
+              {!isUnlimited && (
+                <div className="h-3 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full bg-progress rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                </div>
+              )}
               <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <Target className="h-3 w-3" /> Target: {formatRupiah(c.target)}
+                <Target className="h-3 w-3" /> Target: {isUnlimited ? "Tak Terbatas" : formatRupiah(c.target)}
               </div>
             </div>
 
