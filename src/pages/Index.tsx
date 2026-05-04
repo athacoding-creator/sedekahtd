@@ -310,12 +310,16 @@ const Index = () => {
                     <div className="text-sm font-bold text-primary mb-2">
                       {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-slate-400">terkumpul</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700"
-                        style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }}
-                      />
-                    </div>
+                    {c.target > 0 ? (
+                      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700"
+                          style={{ width: `${Math.min(100, (c.terkumpul / Math.max(1, c.target)) * 100)}%` }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-400">Target: Tak Terbatas</div>
+                    )}
                   </div>
                 </Link>
               ))}
