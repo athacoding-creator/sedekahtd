@@ -30,7 +30,7 @@ type PaymentMethod = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -91,6 +91,7 @@ const AdminCampaigns = () => {
       deskripsi: c.deskripsi,
       kategori: c.kategori ?? "",
       target: c.target,
+      targetUnlimited: c.target === 0,
       gambar_url: c.gambar_url ?? "",
       payment_method_ids: campaignPayments[c.id] ?? [],
       fb_pixel_id: c.fb_pixel_id ?? "",
@@ -117,7 +118,7 @@ const AdminCampaigns = () => {
     if (!form.judul.trim() || !form.deskripsi.trim()) {
       toast.error("Judul & deskripsi wajib diisi"); return;
     }
-    if (form.target <= 0) { toast.error("Target donasi harus lebih dari 0"); return; }
+    if (!form.targetUnlimited && form.target <= 0) { toast.error("Target donasi harus lebih dari 0"); return; }
     if (form.payment_method_ids.length === 0) { toast.error("Pilih minimal 1 metode pembayaran"); return; }
 
     setSaving(true);
@@ -127,7 +128,7 @@ const AdminCampaigns = () => {
         judul: form.judul.trim(),
         deskripsi: form.deskripsi.trim(),
         kategori: form.kategori.trim() || null,
-        target: Number(form.target),
+        target: form.targetUnlimited ? 0 : Number(form.target),
         gambar_url,
         qris_id: null, // legacy field, tidak digunakan lagi (metode via campaign_payment_methods)
         fb_pixel_id: form.fb_pixel_id.trim() || null,
@@ -275,7 +276,7 @@ const AdminCampaigns = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatRupiah(c.target)}</td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{c.target === 0 ? "∞ Tak Terbatas" : formatRupiah(c.target)}</td>
                     <td className="px-4 py-3 font-bold text-primary whitespace-nowrap">{formatRupiah(c.terkumpul)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 min-w-[80px]">
@@ -357,13 +358,24 @@ const AdminCampaigns = () => {
                   </select>
                 </Field>
                 <Field label="Target Donasi (Rp) *">
-                  <input
-                    type="number"
-                    value={form.target || ""}
-                    onChange={e => setForm({ ...form, target: Number(e.target.value) })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none"
-                    placeholder="300000000"
-                  />
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.targetUnlimited}
+                      onChange={e => setForm({ ...form, targetUnlimited: e.target.checked, target: e.target.checked ? 0 : form.target })}
+                      className="rounded border-border"
+                    />
+                    Tak Terbatas (Unlimited)
+                  </label>
+                  {!form.targetUnlimited && (
+                    <input
+                      type="number"
+                      value={form.target || ""}
+                      onChange={e => setForm({ ...form, target: Number(e.target.value) })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none"
+                      placeholder="300000000"
+                    />
+                  )}
                 </Field>
               </div>
 
