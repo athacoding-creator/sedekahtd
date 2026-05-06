@@ -2,7 +2,8 @@ import { AdminLayout } from "@/components/AdminLayout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Save, ExternalLink, CheckCircle2, AlertTriangle, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Loader2, Save, ExternalLink, CheckCircle2, AlertTriangle, Eye, EyeOff, RefreshCw, MessageCircle, RotateCcw } from "lucide-react";
+import { DEFAULT_TEMPLATE_CONFIRM, DEFAULT_TEMPLATE_THANKYOU } from "@/lib/whatsapp";
 
 type Setting = {
   key: string;
@@ -17,6 +18,9 @@ const AdminSettings = () => {
   const [pixelEnabled, setPixelEnabled] = useState(false);
   const [showPixelId, setShowPixelId] = useState(false);
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "ok" | "fail">("idle");
+  const [waConfirm, setWaConfirm] = useState(DEFAULT_TEMPLATE_CONFIRM);
+  const [waThankyou, setWaThankyou] = useState(DEFAULT_TEMPLATE_THANKYOU);
+  const [savingWa, setSavingWa] = useState(false);
 
   const load = async () => {
     setLoading(true);
