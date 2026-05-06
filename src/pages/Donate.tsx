@@ -155,6 +155,7 @@ const Donate = () => {
         nama: parse.data.nama,
         nominal: parse.data.nominal,
         campaign: campaign?.judul,
+        template: waTemplate,
       });
       window.open(waUrl, "_blank");
 
