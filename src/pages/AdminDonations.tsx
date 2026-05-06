@@ -79,7 +79,11 @@ const AdminDonations = () => {
   const totalPending = filtered.filter(d => d.status === "pending").length;
 
   const openWa = (d: Donation) => {
-    const text = `Halo ${d.nama}, terima kasih atas donasi sebesar Rp ${new Intl.NumberFormat("id-ID").format(d.nominal)} untuk ${campaignName(d.campaign_id)}. Jazakallahu khairan 🙏`;
+    const text = buildFromTemplate(waThankyou, {
+      nama: d.nama,
+      nominal: new Intl.NumberFormat("id-ID").format(d.nominal),
+      campaign: campaignName(d.campaign_id),
+    });
     const target = d.no_whatsapp
       ? `62${d.no_whatsapp.replace(/^0/, "")}`
       : WA_NUMBER;
