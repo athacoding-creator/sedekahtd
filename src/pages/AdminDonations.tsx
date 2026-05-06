@@ -42,6 +42,9 @@ const AdminDonations = () => {
 
   useEffect(() => {
     load();
+    // Fetch WA template
+    supabase.from("site_settings").select("value").eq("key", "wa_template_thankyou").maybeSingle()
+      .then(({ data }) => { if (data?.value) setWaThankyou(data.value); });
     // Realtime: refetch saat ada perubahan donations / campaigns
     const ch = supabase
       .channel("admin-donations-realtime")
