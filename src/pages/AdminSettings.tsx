@@ -2,7 +2,8 @@ import { AdminLayout } from "@/components/AdminLayout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Save, ExternalLink, CheckCircle2, AlertTriangle, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Loader2, Save, ExternalLink, CheckCircle2, AlertTriangle, Eye, EyeOff, RefreshCw, MessageCircle, RotateCcw } from "lucide-react";
+import { DEFAULT_TEMPLATE_CONFIRM, DEFAULT_TEMPLATE_THANKYOU } from "@/lib/whatsapp";
 
 type Setting = {
   key: string;
@@ -17,6 +18,9 @@ const AdminSettings = () => {
   const [pixelEnabled, setPixelEnabled] = useState(false);
   const [showPixelId, setShowPixelId] = useState(false);
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "ok" | "fail">("idle");
+  const [waConfirm, setWaConfirm] = useState(DEFAULT_TEMPLATE_CONFIRM);
+  const [waThankyou, setWaThankyou] = useState(DEFAULT_TEMPLATE_THANKYOU);
+  const [savingWa, setSavingWa] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -31,6 +35,8 @@ const AdminSettings = () => {
     setSettings(map);
     setPixelId(map["fb_pixel_id"] ?? "");
     setPixelEnabled(map["fb_pixel_enabled"] === "true");
+    setWaConfirm(map["wa_template_confirm"] || DEFAULT_TEMPLATE_CONFIRM);
+    setWaThankyou(map["wa_template_thankyou"] || DEFAULT_TEMPLATE_THANKYOU);
   };
 
   useEffect(() => { load(); }, []);
@@ -227,10 +233,94 @@ const AdminSettings = () => {
             </div>
           </div>
 
-          {/* Placeholder untuk pengaturan lain di masa depan */}
-          <div className="bg-card rounded-2xl border border-dashed border-border p-6 text-center text-muted-foreground text-sm">
-            <p className="font-semibold mb-1">Pengaturan lainnya</p>
-            <p className="text-xs">Google Analytics, WhatsApp API, dan integrasi lainnya akan tersedia di sini.</p>
+          {/* WhatsApp Template Card */}
+          <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-muted/30">
+              <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-base">Template Pesan WhatsApp</h2>
+                <p className="text-xs text-muted-foreground">Atur pesan otomatis konfirmasi & terima kasih donasi</p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Variable hints */}
+              <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700 space-y-1">
+                <p className="font-semibold">Variabel yang tersedia:</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {["{nama}", "{nominal}", "{campaign}"].map(v => (
+                    <code key={v} className="px-2 py-1 rounded bg-green-100 text-xs font-mono font-bold">{v}</code>
+                  ))}
+                </div>
+                <p className="text-xs mt-2">Variabel akan otomatis diganti dengan data donasi saat pesan dikirim.</p>
+              </div>
+
+              {/* Template Konfirmasi Donatur */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold">Pesan Konfirmasi Donatur</label>
+                  <button
+                    type="button"
+                    onClick={() => setWaConfirm(DEFAULT_TEMPLATE_CONFIRM)}
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-smooth"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Reset default
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">Pesan yang dikirim donatur ke admin setelah transfer (di halaman donasi).</p>
+                <textarea
+                  value={waConfirm}
+                  onChange={e => setWaConfirm(e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none text-sm transition-smooth resize-y"
+                  placeholder="Tulis template pesan konfirmasi..."
+                />
+              </div>
+
+              {/* Template Terima Kasih Admin */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold">Pesan Terima Kasih Admin</label>
+                  <button
+                    type="button"
+                    onClick={() => setWaThankyou(DEFAULT_TEMPLATE_THANKYOU)}
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-smooth"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Reset default
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">Pesan balasan admin ke donatur via tombol WA di halaman Admin Donasi.</p>
+                <textarea
+                  value={waThankyou}
+                  onChange={e => setWaThankyou(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none text-sm transition-smooth resize-y"
+                  placeholder="Tulis template pesan terima kasih..."
+                />
+              </div>
+
+              {/* Save button */}
+              <button
+                onClick={async () => {
+                  setSavingWa(true);
+                  try {
+                    await upsert("wa_template_confirm", waConfirm);
+                    await upsert("wa_template_thankyou", waThankyou);
+                    toast.success("Template WhatsApp disimpan!");
+                  } catch (e: any) {
+                    toast.error(e.message || "Gagal menyimpan");
+                  } finally {
+                    setSavingWa(false);
+                  }
+                }}
+                disabled={savingWa}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-600 text-white font-bold text-sm shadow-button hover:scale-[1.02] transition-smooth disabled:opacity-60 disabled:hover:scale-100"
+              >
+                {savingWa ? <><Loader2 className="h-4 w-4 animate-spin" /> Menyimpan...</> : <><Save className="h-4 w-4" /> Simpan Template WhatsApp</>}
+              </button>
+            </div>
           </div>
 
         </div>

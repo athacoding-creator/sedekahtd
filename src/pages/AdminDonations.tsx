@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
 import { CheckCircle2, Eye, Loader2, Filter, MessageCircle } from "lucide-react";
-import { WA_NUMBER } from "@/lib/whatsapp";
+import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU } from "@/lib/whatsapp";
 
 type Donation = {
   id: string;
@@ -26,6 +26,7 @@ const AdminDonations = () => {
   const [loading, setLoading] = useState(true);
   const [filterCampaign, setFilterCampaign] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [waThankyou, setWaThankyou] = useState(DEFAULT_TEMPLATE_THANKYOU);
 
   const load = async () => {
     setLoading(true);
@@ -41,6 +42,9 @@ const AdminDonations = () => {
 
   useEffect(() => {
     load();
+    // Fetch WA template
+    supabase.from("site_settings").select("value").eq("key", "wa_template_thankyou").maybeSingle()
+      .then(({ data }) => { if (data?.value) setWaThankyou(data.value); });
     // Realtime: refetch saat ada perubahan donations / campaigns
     const ch = supabase
       .channel("admin-donations-realtime")
@@ -75,7 +79,11 @@ const AdminDonations = () => {
   const totalPending = filtered.filter(d => d.status === "pending").length;
 
   const openWa = (d: Donation) => {
-    const text = `Halo ${d.nama}, terima kasih atas donasi sebesar Rp ${new Intl.NumberFormat("id-ID").format(d.nominal)} untuk ${campaignName(d.campaign_id)}. Jazakallahu khairan 🙏`;
+    const text = buildFromTemplate(waThankyou, {
+      nama: d.nama,
+      nominal: new Intl.NumberFormat("id-ID").format(d.nominal),
+      campaign: campaignName(d.campaign_id),
+    });
     const target = d.no_whatsapp
       ? `62${d.no_whatsapp.replace(/^0/, "")}`
       : WA_NUMBER;

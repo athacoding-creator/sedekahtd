@@ -57,6 +57,7 @@ const Donate = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [waTemplate, setWaTemplate] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!id) return;
@@ -84,6 +85,14 @@ const Donate = () => {
         setPaymentMethods(list);
         if (list.length > 0) setSelectedPm(list[0]);
       }
+
+      // Fetch WA template
+      const { data: tplRow } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "wa_template_confirm")
+        .maybeSingle();
+      if (tplRow?.value) setWaTemplate(tplRow.value);
     })();
   }, [id]);
 
@@ -146,6 +155,7 @@ const Donate = () => {
         nama: parse.data.nama,
         nominal: parse.data.nominal,
         campaign: campaign?.judul,
+        template: waTemplate,
       });
       window.open(waUrl, "_blank");
 
