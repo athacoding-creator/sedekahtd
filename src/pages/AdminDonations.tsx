@@ -26,6 +26,7 @@ const AdminDonations = () => {
   const [loading, setLoading] = useState(true);
   const [filterCampaign, setFilterCampaign] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [waThankyou, setWaThankyou] = useState(DEFAULT_TEMPLATE_THANKYOU);
 
   const load = async () => {
     setLoading(true);
