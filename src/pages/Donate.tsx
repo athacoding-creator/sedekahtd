@@ -57,6 +57,7 @@ const Donate = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [waTemplate, setWaTemplate] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!id) return;
