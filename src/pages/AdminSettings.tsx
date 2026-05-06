@@ -35,6 +35,8 @@ const AdminSettings = () => {
     setSettings(map);
     setPixelId(map["fb_pixel_id"] ?? "");
     setPixelEnabled(map["fb_pixel_enabled"] === "true");
+    setWaConfirm(map["wa_template_confirm"] || DEFAULT_TEMPLATE_CONFIRM);
+    setWaThankyou(map["wa_template_thankyou"] || DEFAULT_TEMPLATE_THANKYOU);
   };
 
   useEffect(() => { load(); }, []);
