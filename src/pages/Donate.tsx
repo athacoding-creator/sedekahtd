@@ -85,6 +85,14 @@ const Donate = () => {
         setPaymentMethods(list);
         if (list.length > 0) setSelectedPm(list[0]);
       }
+
+      // Fetch WA template
+      const { data: tplRow } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "wa_template_confirm")
+        .maybeSingle();
+      if (tplRow?.value) setWaTemplate(tplRow.value);
     })();
   }, [id]);
 
