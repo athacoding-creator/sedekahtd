@@ -210,7 +210,7 @@ const Donate = () => {
           </button>
 
           <div className="text-center mb-6">
-            <p className="text-sm text-muted-foreground">Terima kasih <span className="font-semibold text-foreground">{nama}</span></p>
+            <p className="text-sm text-muted-foreground">Terima kasih <span className="font-semibold text-foreground">{panggilan} {nama}</span></p>
             <p className="text-sm text-muted-foreground">atas donasi yang akan Anda berikan untuk:</p>
             {campaign && <p className="font-display font-bold text-lg mt-2">{campaign.judul}</p>}
             {isPaket && (
