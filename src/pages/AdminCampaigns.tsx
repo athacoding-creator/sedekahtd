@@ -33,6 +33,7 @@ type PaymentMethod = {
 const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
 
 const AdminCampaigns = () => {
+  const [items, setItems] = useState<Campaign[]>([]);
   const [kategoriList, setKategoriList] = useState<string[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [campaignPayments, setCampaignPayments] = useState<Record<string, string[]>>({}); // campaign_id -> [payment_method_id]
