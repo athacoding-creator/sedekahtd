@@ -33,7 +33,7 @@ type PaymentMethod = {
 const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
 
 const AdminCampaigns = () => {
-  const [items, setItems] = useState<Campaign[]>([]);
+  const [kategoriList, setKategoriList] = useState<string[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [campaignPayments, setCampaignPayments] = useState<Record<string, string[]>>({}); // campaign_id -> [payment_method_id]
   const [loading, setLoading] = useState(true);
@@ -45,10 +45,11 @@ const AdminCampaigns = () => {
 
   const load = async () => {
     setLoading(true);
-    const [campRes, pmRes, cpmRes] = await Promise.all([
+    const [campRes, pmRes, cpmRes, catRes] = await Promise.all([
       (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("payment_methods").select("id, nama, tipe, gambar_url, aktif").order("urutan").order("created_at"),
       (supabase as any).from("campaign_payment_methods").select("campaign_id, payment_method_id"),
+      (supabase as any).from("categories").select("nama").eq("aktif", true).order("urutan"),
     ]);
     setLoading(false);
     if (campRes.error) toast.error(campRes.error.message);
@@ -60,6 +61,8 @@ const AdminCampaigns = () => {
         (map[r.campaign_id] ||= []).push(r.payment_method_id);
       });
       setCampaignPayments(map);
+    }
+    if (!catRes.error) setKategoriList((catRes.data ?? []).map((c: any) => c.nama));
     }
   };
 
@@ -352,9 +355,9 @@ const AdminCampaigns = () => {
                     className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none"
                   >
                     <option value="">— Pilih Kategori —</option>
-                    <option value="Sosial">Sosial</option>
-                    <option value="Kemanusiaan">Kemanusiaan</option>
-                    <option value="Pembangunan">Pembangunan</option>
+                    {kategoriList.map(k => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
                   </select>
                 </Field>
                 <Field label="Target Donasi (Rp) *">
