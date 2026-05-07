@@ -17,6 +17,7 @@ import AdminHeroes from "./pages/AdminHeroes.tsx";
 import AdminPayments from "./pages/AdminPayments.tsx";
 import AdminStorage from "./pages/AdminStorage.tsx";
 import AdminSettings from "./pages/AdminSettings.tsx";
+import AdminCategories from "./pages/AdminCategories.tsx";
 import FacebookPixel from "./components/FacebookPixel.tsx";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/admin/payments" element={<AdminPayments />} />
           <Route path="/admin/storage" element={<AdminStorage />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
