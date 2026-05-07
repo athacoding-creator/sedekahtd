@@ -64,7 +64,6 @@ const AdminCampaigns = () => {
       setCampaignPayments(map);
     }
     if (!catRes.error) setKategoriList((catRes.data ?? []).map((c: any) => c.nama));
-    }
   };
 
   useEffect(() => {
