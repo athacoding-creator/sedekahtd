@@ -339,16 +339,31 @@ const Donate = () => {
         {campaign && <p className="text-muted-foreground mb-8">Untuk: <span className="font-semibold text-foreground">{campaign.judul}</span></p>}
 
         <div className="bg-card rounded-3xl border border-border/60 shadow-soft p-6 space-y-6">
-          {/* Nama */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Nama Donatur</label>
-            <input
-              value={nama}
-              onChange={e => setNama(e.target.value)}
-              maxLength={80}
-              placeholder="Nama lengkap (atau Hamba Allah)"
-              className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
-            />
+          {/* Panggilan & Nama */}
+          <div className="grid grid-cols-[auto_1fr] gap-3">
+            <div>
+              <label className="block text-sm font-semibold mb-2">Panggilan</label>
+              <select
+                value={panggilan}
+                onChange={e => setPanggilan(e.target.value)}
+                className="h-[46px] px-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth text-sm font-semibold appearance-none pr-7 cursor-pointer"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+              >
+                <option value="Bapak">Bapak</option>
+                <option value="Ibu">Ibu</option>
+                <option value="Kak">Kak</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Nama Donatur</label>
+              <input
+                value={nama}
+                onChange={e => setNama(e.target.value)}
+                maxLength={80}
+                placeholder="Nama lengkap (atau Hamba Allah)"
+                className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none transition-smooth"
+              />
+            </div>
           </div>
 
           {/* No. WhatsApp */}
