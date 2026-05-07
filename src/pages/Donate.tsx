@@ -140,9 +140,10 @@ const Donate = () => {
       const { error: upErr } = await supabase.storage.from("bukti-transfer").upload(path, file);
       if (upErr) throw upErr;
 
+      const namaLengkap = `${panggilan} ${parse.data.nama}`;
       const { error: insErr } = await supabase.from("donations").insert({
         campaign_id: id,
-        nama: parse.data.nama,
+        nama: namaLengkap,
         nominal: parse.data.nominal,
         no_whatsapp: parse.data.no_whatsapp,
         pesan: pesan.trim() || null,
@@ -153,7 +154,7 @@ const Donate = () => {
       if (insErr) throw insErr;
 
       const waUrl = buildWaConfirmUrl({
-        nama: parse.data.nama,
+        nama: namaLengkap,
         nominal: parse.data.nominal,
         campaign: campaign?.judul,
         template: waTemplate,
