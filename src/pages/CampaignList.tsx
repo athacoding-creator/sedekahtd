@@ -4,16 +4,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search } from "lucide-react";
 
-const KATEGORI = ["Semua", "Sosial", "Kemanusiaan", "Pembangunan"];
-
 const CampaignList = () => {
+  const [kategoriList, setKategoriList] = useState<string[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Semua");
 
   useEffect(() => {
     (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false })
-      .then(({ data }) => setCampaigns((data as Campaign[]) ?? []));
+      .then(({ data }: any) => setCampaigns((data as Campaign[]) ?? []));
+    (supabase as any).from("categories").select("nama").eq("aktif", true).order("urutan")
+      .then(({ data }: any) => setKategoriList((data ?? []).map((c: any) => c.nama)));
   }, []);
 
   const filtered = campaigns.filter(c =>
@@ -38,7 +39,8 @@ const CampaignList = () => {
 
           {/* Kategori filter */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-5">
-            {KATEGORI.map(k => (
+            {/* Dynamic categories */}
+            {["Semua", ...kategoriList].map(k => (
               <button
                 key={k}
                 onClick={() => setCat(k)}
