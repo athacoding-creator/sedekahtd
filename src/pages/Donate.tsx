@@ -49,6 +49,7 @@ const Donate = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPm, setSelectedPm] = useState<PaymentMethod | null>(null);
   const [step, setStep] = useState<"form" | "pay">("form");
+  const [panggilan, setPanggilan] = useState("Bapak");
   const [nama, setNama] = useState("");
   const [noWa, setNoWa] = useState("");
   const [pesan, setPesan] = useState("");
