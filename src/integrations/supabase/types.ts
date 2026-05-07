@@ -153,6 +153,30 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          aktif: boolean
+          created_at: string
+          id: string
+          nama: string
+          urutan: number
+        }
+        Insert: {
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          nama: string
+          urutan?: number
+        }
+        Update: {
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          nama?: string
+          urutan?: number
+        }
+        Relationships: []
+      }
       donations: {
         Row: {
           bukti_transfer: string | null
