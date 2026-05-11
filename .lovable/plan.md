@@ -1,41 +1,43 @@
+## Tujuan
+Tampilkan jumlah donatur di setiap card campaign, dan urutkan daftar campaign: **Pilihan dulu, lalu yang paling banyak donaturnya**.
 
-## Rencana: Template Pesan WhatsApp di Admin Settings
+## Perubahan Database
+Tambah kolom hitungan donatur agar query cepat (tanpa harus count tiap render):
 
-### Apa yang akan dibuat
+- `campaigns.jumlah_donatur` (integer, default 0) — diisi otomatis dari donasi berstatus `verified`.
+- Update trigger `update_campaign_terkumpul` agar saat donasi jadi `verified` / batal verified, kolom `jumlah_donatur` ikut +1 / -1.
+- Update fungsi `sync_campaign_terkumpul` agar sekalian recompute `jumlah_donatur = COUNT(donations verified)`.
+- Backfill: isi `jumlah_donatur` semua campaign dari data donasi terverifikasi yang sudah ada.
 
-Menambahkan section baru di halaman **Admin Settings** untuk mengedit 2 template pesan WhatsApp:
+## Perubahan Frontend
 
-1. **Pesan Konfirmasi Donatur** — pesan yang dikirim donatur ke admin setelah transfer (dipakai di halaman Donate)
-2. **Pesan Terima Kasih Admin** — pesan balasan admin ke donatur (dipakai di tombol WA di halaman Admin Donasi)
+**1. Card campaign (`CampaignCard.tsx`)**
+Tambah baris kecil di bawah nominal terkumpul:
+```
+👥 152 Donatur     ∞ hari lagi (opsional, skip dulu)
+```
+- Tampil ikon `Users` + angka + label "Donatur".
+- Hanya tampil bila `jumlah_donatur > 0` (kalau 0, sembunyikan biar tidak terlihat sepi).
 
-Template mendukung **variabel placeholder** seperti `{nama}`, `{nominal}`, `{campaign}` yang otomatis diganti saat pesan dikirim.
+**2. Urutan di `CampaignList.tsx` & `Index.tsx` (homepage)**
+Ganti `.order("created_at", desc)` jadi:
+```ts
+.order("is_pilihan", { ascending: false })
+.order("jumlah_donatur", { ascending: false })
+.order("created_at", { ascending: false })  // tie-breaker
+```
+Hasil: campaign Pilihan selalu di atas, lalu sisanya diurut dari donatur terbanyak.
 
-### Perubahan
+**3. Type update**
+Tambah `jumlah_donatur?: number` di type `Campaign` (`CampaignCard.tsx`).
 
-**1. Admin Settings (`src/pages/AdminSettings.tsx`)**
-- Tambah card baru "Template Pesan WhatsApp" dengan 2 textarea:
-  - `wa_template_confirm` — template konfirmasi donatur
-  - `wa_template_thankyou` — template terima kasih admin
-- Tampilkan daftar variabel yang tersedia: `{nama}`, `{nominal}`, `{campaign}`
-- Default value sudah terisi pesan yang sama seperti sekarang
-- Simpan ke tabel `site_settings` via upsert (tabel sudah ada, tidak perlu migrasi)
+## Catatan
+- Hitungan donatur = jumlah baris donasi `status='verified'` per campaign (1 donasi = 1 donatur, sesuai pilihan Anda).
+- Di Admin Donations yang sudah verifikasi/un-verifikasi donasi, angka donatur otomatis ikut update via trigger — realtime tanpa perlu refresh manual.
+- Halaman admin lain (AdminCampaigns) tidak perlu diubah; field `is_pilihan` yang sudah ada tetap dipakai untuk pin ke atas.
 
-**2. WhatsApp helper (`src/lib/whatsapp.ts`)**
-- Tambah fungsi `buildFromTemplate(template, vars)` yang mengganti placeholder dengan nilai aktual
-- Update `buildWaConfirmUrl` agar menerima parameter template opsional
-
-**3. Halaman Donate (`src/pages/Donate.tsx`)**
-- Fetch template `wa_template_confirm` dari `site_settings` saat load
-- Gunakan template tersebut (atau fallback ke default) saat membangun URL WA
-
-**4. Admin Donasi (`src/pages/AdminDonations.tsx`)**
-- Fetch template `wa_template_thankyou` dari `site_settings` saat load
-- Gunakan template tersebut di fungsi `openWa`
-
-### Detail Teknis
-
-- Tidak perlu migrasi database — data disimpan di `site_settings` yang sudah ada
-- Key yang digunakan: `wa_template_confirm`, `wa_template_thankyou`
-- Default templates:
-  - Confirm: `Assalamu'alaikum Admin Teras Dakwah,\n\nSaya sudah melakukan transfer donasi:\n• Nama: {nama}\n• Nominal: Rp {nominal}\n• Campaign: {campaign}\n\nBerikut saya kirim bukti transfernya. Mohon konfirmasinya, jazakumullah khairan.`
-  - Thank you: `Halo {nama}, terima kasih atas donasi sebesar Rp {nominal} untuk {campaign}. Jazakallahu khairan 🙏`
+## Files
+- migration baru (alter table + update function + update trigger + backfill)
+- `src/components/CampaignCard.tsx` — tampilkan jumlah donatur
+- `src/pages/CampaignList.tsx` — ubah order
+- `src/pages/Index.tsx` — ubah order (kalau ada list campaign di homepage)
