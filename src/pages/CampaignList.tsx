@@ -11,7 +11,10 @@ const CampaignList = () => {
   const [cat, setCat] = useState<string>("Semua");
 
   useEffect(() => {
-    (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false })
+    (supabase as any).from("campaigns").select("*")
+      .order("is_pilihan", { ascending: false })
+      .order("jumlah_donatur", { ascending: false })
+      .order("created_at", { ascending: false })
       .then(({ data }: any) => setCampaigns((data as Campaign[]) ?? []));
     (supabase as any).from("categories").select("nama").eq("aktif", true).order("urutan")
       .then(({ data }: any) => setKategoriList((data ?? []).map((c: any) => c.nama)));
