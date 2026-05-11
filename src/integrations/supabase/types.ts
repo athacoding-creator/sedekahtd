@@ -110,6 +110,7 @@ export type Database = {
           is_pilihan: boolean
           jenis_campaign: string
           judul: string
+          jumlah_donatur: number
           kategori: string | null
           nama_paket: string | null
           qris_id: string | null
@@ -127,6 +128,7 @@ export type Database = {
           is_pilihan?: boolean
           jenis_campaign?: string
           judul: string
+          jumlah_donatur?: number
           kategori?: string | null
           nama_paket?: string | null
           qris_id?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           is_pilihan?: boolean
           jenis_campaign?: string
           judul?: string
+          jumlah_donatur?: number
           kategori?: string | null
           nama_paket?: string | null
           qris_id?: string | null
