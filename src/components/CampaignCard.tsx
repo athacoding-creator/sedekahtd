@@ -44,9 +44,16 @@ export const CampaignCard = ({ c, index = 0 }: { c: Campaign; index?: number }) 
               <span className="truncate">YAYASAN TERAS DAKWAH</span>
               <CheckCircle2 className="h-3 w-3 text-primary flex-shrink-0 fill-primary text-white" />
             </div>
-            <div className="text-sm font-bold text-primary mb-2.5">
+            <div className="text-sm font-bold text-primary mb-1.5">
               {formatRupiah(c.terkumpul)} <span className="text-[10px] font-normal text-slate-400">terkumpul</span>
             </div>
+            {(c.jumlah_donatur ?? 0) > 0 && (
+              <div className="flex items-center gap-1 text-[11px] text-slate-500 mb-2.5">
+                <Users className="h-3 w-3 text-primary" />
+                <span className="font-semibold text-slate-700">{c.jumlah_donatur}</span>
+                <span className="text-slate-400">Donatur</span>
+              </div>
+            )}
           </div>
           <div className="space-y-1.5">
             {!isUnlimited && (
