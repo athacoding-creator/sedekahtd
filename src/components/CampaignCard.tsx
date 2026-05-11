@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { formatRupiah } from "@/lib/format";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Users } from "lucide-react";
 
 export type Campaign = {
   id: string;
@@ -11,6 +11,7 @@ export type Campaign = {
   terkumpul: number;
   kategori: string | null;
   is_pilihan?: boolean;
+  jumlah_donatur?: number;
 };
 
 /** Card style Teras Dakwah: gambar atas, info bawah, progress hijau */
