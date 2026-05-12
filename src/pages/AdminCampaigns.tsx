@@ -20,6 +20,8 @@ type Campaign = {
   jenis_campaign: string;
   nama_paket: string | null;
   harga_paket: number | null;
+  tombol_teks: string | null;
+  tombol_warna: string | null;
 };
 
 type PaymentMethod = {
@@ -30,7 +32,7 @@ type PaymentMethod = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0, tombol_teks: "", tombol_warna: "" };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
