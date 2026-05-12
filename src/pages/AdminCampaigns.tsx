@@ -104,6 +104,8 @@ const AdminCampaigns = () => {
       jenis_campaign: c.jenis_campaign ?? "uang",
       nama_paket: c.nama_paket ?? "",
       harga_paket: c.harga_paket ?? 0,
+      tombol_teks: c.tombol_teks ?? "",
+      tombol_warna: c.tombol_warna ?? "",
     });
     setFile(null);
     setOpen(true);
