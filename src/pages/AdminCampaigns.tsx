@@ -143,6 +143,8 @@ const AdminCampaigns = () => {
         jenis_campaign: form.jenis_campaign,
         nama_paket: form.jenis_campaign === "paket" ? (form.nama_paket.trim() || null) : null,
         harga_paket: form.jenis_campaign === "paket" ? (Number(form.harga_paket) || null) : null,
+        tombol_teks: form.tombol_teks.trim() || null,
+        tombol_warna: form.tombol_warna.trim() || null,
       };
 
       let campaignId: string | null = editing?.id ?? null;
