@@ -154,7 +154,8 @@ const Donate = () => {
       if (insErr) throw insErr;
 
       const waUrl = buildWaConfirmUrl({
-        nama: namaLengkap,
+        panggilan,
+        nama: parse.data.nama,
         nominal: parse.data.nominal,
         campaign: campaign?.judul,
         template: waTemplate,

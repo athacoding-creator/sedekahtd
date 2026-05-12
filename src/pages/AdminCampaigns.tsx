@@ -20,6 +20,8 @@ type Campaign = {
   jenis_campaign: string;
   nama_paket: string | null;
   harga_paket: number | null;
+  tombol_teks: string | null;
+  tombol_warna: string | null;
 };
 
 type PaymentMethod = {
@@ -30,7 +32,7 @@ type PaymentMethod = {
   aktif: boolean;
 };
 
-const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0 };
+const empty = { judul: "", deskripsi: "", kategori: "", target: 0, targetUnlimited: false, gambar_url: "", payment_method_ids: [] as string[], fb_pixel_id: "", is_pilihan: false, jenis_campaign: "uang", nama_paket: "", harga_paket: 0, tombol_teks: "", tombol_warna: "" };
 
 const AdminCampaigns = () => {
   const [items, setItems] = useState<Campaign[]>([]);
@@ -102,6 +104,8 @@ const AdminCampaigns = () => {
       jenis_campaign: c.jenis_campaign ?? "uang",
       nama_paket: c.nama_paket ?? "",
       harga_paket: c.harga_paket ?? 0,
+      tombol_teks: c.tombol_teks ?? "",
+      tombol_warna: c.tombol_warna ?? "",
     });
     setFile(null);
     setOpen(true);
@@ -139,6 +143,8 @@ const AdminCampaigns = () => {
         jenis_campaign: form.jenis_campaign,
         nama_paket: form.jenis_campaign === "paket" ? (form.nama_paket.trim() || null) : null,
         harga_paket: form.jenis_campaign === "paket" ? (Number(form.harga_paket) || null) : null,
+        tombol_teks: form.tombol_teks.trim() || null,
+        tombol_warna: form.tombol_warna.trim() || null,
       };
 
       let campaignId: string | null = editing?.id ?? null;
@@ -519,6 +525,57 @@ const AdminCampaigns = () => {
                 />
                 <p className="text-xs text-muted-foreground mt-1">Pixel khusus untuk campaign ini. Kosongkan jika tidak digunakan.</p>
               </Field>
+
+              {/* Tombol Donasi: teks & warna */}
+              <div className="p-4 rounded-xl border border-border bg-background space-y-3">
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <span>🎨 Tombol Donasi</span>
+                  <span className="text-xs font-normal text-muted-foreground">(opsional, kosongkan untuk default)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Teks Tombol</label>
+                    <input
+                      value={form.tombol_teks}
+                      onChange={e => setForm({ ...form, tombol_teks: e.target.value })}
+                      maxLength={40}
+                      className="w-full px-3 py-2.5 rounded-lg bg-card border border-border focus:border-primary focus:outline-none text-sm"
+                      placeholder="Sedekah Sekarang"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1.5 text-muted-foreground">Warna</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.tombol_warna || "#f59e0b"}
+                        onChange={e => setForm({ ...form, tombol_warna: e.target.value })}
+                        className="h-10 w-14 rounded-lg border border-border cursor-pointer bg-card"
+                      />
+                      {form.tombol_warna && (
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, tombol_warna: "" })}
+                          className="text-xs text-muted-foreground hover:text-destructive underline"
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-2">
+                  <div className="text-xs text-muted-foreground mb-1.5">Preview:</div>
+                  <div
+                    className={`w-full text-center px-6 py-3 rounded-2xl font-extrabold uppercase tracking-wide text-sm ${
+                      form.tombol_warna ? "text-white" : "bg-accent text-accent-foreground"
+                    }`}
+                    style={form.tombol_warna ? { backgroundColor: form.tombol_warna } : undefined}
+                  >
+                    ❤ {form.tombol_teks.trim() || "Sedekah Sekarang"}
+                  </div>
+                </div>
+              </div>
 
               {/* Toggle Program Pilihan */}
               <button

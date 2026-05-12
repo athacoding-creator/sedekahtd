@@ -12,6 +12,8 @@ export type Campaign = {
   kategori: string | null;
   is_pilihan?: boolean;
   jumlah_donatur?: number;
+  tombol_teks?: string | null;
+  tombol_warna?: string | null;
 };
 
 /** Card style Teras Dakwah: gambar atas, info bawah, progress hijau */

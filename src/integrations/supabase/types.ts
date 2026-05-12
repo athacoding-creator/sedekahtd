@@ -116,6 +116,8 @@ export type Database = {
           qris_id: string | null
           target: number
           terkumpul: number
+          tombol_teks: string | null
+          tombol_warna: string | null
           updated_at: string
         }
         Insert: {
@@ -134,6 +136,8 @@ export type Database = {
           qris_id?: string | null
           target?: number
           terkumpul?: number
+          tombol_teks?: string | null
+          tombol_warna?: string | null
           updated_at?: string
         }
         Update: {
@@ -152,6 +156,8 @@ export type Database = {
           qris_id?: string | null
           target?: number
           terkumpul?: number
+          tombol_teks?: string | null
+          tombol_warna?: string | null
           updated_at?: string
         }
         Relationships: []

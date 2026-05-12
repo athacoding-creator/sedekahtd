@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
 import { CheckCircle2, Eye, Loader2, Filter, MessageCircle } from "lucide-react";
-import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU } from "@/lib/whatsapp";
+import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU, splitPanggilan } from "@/lib/whatsapp";
 
 type Donation = {
   id: string;
@@ -79,8 +79,10 @@ const AdminDonations = () => {
   const totalPending = filtered.filter(d => d.status === "pending").length;
 
   const openWa = (d: Donation) => {
+    const { panggilan, nama } = splitPanggilan(d.nama);
     const text = buildFromTemplate(waThankyou, {
-      nama: d.nama,
+      panggilan,
+      nama,
       nominal: new Intl.NumberFormat("id-ID").format(d.nominal),
       campaign: campaignName(d.campaign_id),
     });

@@ -21,6 +21,10 @@ const AdminSettings = () => {
   const [waConfirm, setWaConfirm] = useState(DEFAULT_TEMPLATE_CONFIRM);
   const [waThankyou, setWaThankyou] = useState(DEFAULT_TEMPLATE_THANKYOU);
   const [savingWa, setSavingWa] = useState(false);
+  const [offsetTotal, setOffsetTotal] = useState(0);
+  const [offsetJumlah, setOffsetJumlah] = useState(0);
+  const [offsetAktif, setOffsetAktif] = useState(0);
+  const [savingStats, setSavingStats] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -37,6 +41,9 @@ const AdminSettings = () => {
     setPixelEnabled(map["fb_pixel_enabled"] === "true");
     setWaConfirm(map["wa_template_confirm"] || DEFAULT_TEMPLATE_CONFIRM);
     setWaThankyou(map["wa_template_thankyou"] || DEFAULT_TEMPLATE_THANKYOU);
+    setOffsetTotal(Number(map["stats_offset_total"] || 0));
+    setOffsetJumlah(Number(map["stats_offset_jumlah"] || 0));
+    setOffsetAktif(Number(map["stats_offset_aktif"] || 0));
   };
 
   useEffect(() => { load(); }, []);
@@ -233,6 +240,79 @@ const AdminSettings = () => {
             </div>
           </div>
 
+          {/* Boost Stats Card */}
+          <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-muted/30">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">📈</span>
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-base">Boost Stats Homepage</h2>
+                <p className="text-xs text-muted-foreground">Tambah angka di stats homepage agar tidak terlihat sepi</p>
+              </div>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-700">
+                <p className="font-semibold mb-1">Cara kerja:</p>
+                <p className="text-xs">Angka di bawah akan <strong>ditambahkan</strong> ke hitungan asli sebelum ditampilkan di homepage. Data donasi asli tidak diubah. Isi <strong>0</strong> untuk menonaktifkan.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Total Donasi (Rp)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={offsetTotal || ""}
+                    onChange={e => setOffsetTotal(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none font-mono text-sm"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Jumlah Donasi</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={offsetJumlah || ""}
+                    onChange={e => setOffsetJumlah(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none font-mono text-sm"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Aktif Program</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={offsetAktif || ""}
+                    onChange={e => setOffsetAktif(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:outline-none font-mono text-sm"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  setSavingStats(true);
+                  try {
+                    await upsert("stats_offset_total", String(offsetTotal));
+                    await upsert("stats_offset_jumlah", String(offsetJumlah));
+                    await upsert("stats_offset_aktif", String(offsetAktif));
+                    toast.success("Boost stats disimpan!");
+                  } catch (e: any) {
+                    toast.error(e.message || "Gagal menyimpan");
+                  } finally {
+                    setSavingStats(false);
+                  }
+                }}
+                disabled={savingStats}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 text-white font-bold text-sm shadow-button hover:scale-[1.02] transition-smooth disabled:opacity-60 disabled:hover:scale-100"
+              >
+                {savingStats ? <><Loader2 className="h-4 w-4 animate-spin" /> Menyimpan...</> : <><Save className="h-4 w-4" /> Simpan Boost Stats</>}
+              </button>
+            </div>
+          </div>
+
           {/* WhatsApp Template Card */}
           <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
             <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-muted/30">
@@ -250,7 +330,7 @@ const AdminSettings = () => {
               <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700 space-y-1">
                 <p className="font-semibold">Variabel yang tersedia:</p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {["{nama}", "{nominal}", "{campaign}"].map(v => (
+                  {["{panggilan}", "{nama}", "{nominal}", "{campaign}"].map(v => (
                     <code key={v} className="px-2 py-1 rounded bg-green-100 text-xs font-mono font-bold">{v}</code>
                   ))}
                 </div>
