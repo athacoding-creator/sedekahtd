@@ -250,19 +250,19 @@ const Index = () => {
               <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
                 <span className="text-[11px] text-slate-500 font-medium text-center leading-tight">Total Donasi</span>
                 <span className="font-display font-bold text-lg text-slate-800 tracking-tight leading-tight mt-1">
-                  Rp <CountUp end={stats.total} duration={2} separator="." useEasing />
+                  Rp <CountUp end={stats.total + offsets.total} duration={2} separator="." useEasing />
                 </span>
               </div>
               <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
                 <span className="text-[11px] text-slate-500 font-medium text-center leading-tight">Jumlah Donasi</span>
                 <span className="font-display font-bold text-lg text-slate-800 tracking-tight leading-tight mt-1">
-                  <CountUp end={stats.jumlah} duration={2} separator="." useEasing />
+                  <CountUp end={stats.jumlah + offsets.jumlah} duration={2} separator="." useEasing />
                 </span>
               </div>
               <div className="flex flex-col items-center justify-center py-4 px-3 flex-1 min-w-0">
                 <span className="text-[11px] text-slate-500 font-medium text-center leading-tight">Aktif Program</span>
                 <span className="font-display font-bold text-lg text-slate-800 tracking-tight leading-tight mt-1">
-                  <CountUp end={stats.aktif} duration={2} useEasing />
+                  <CountUp end={stats.aktif + offsets.aktif} duration={2} useEasing />
                 </span>
               </div>
             </div>
