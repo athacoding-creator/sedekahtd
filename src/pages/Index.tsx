@@ -94,6 +94,19 @@ const Index = () => {
         setDonations((data as PublicDonation[]) ?? []);
       });
 
+    // Load stats offsets (admin boost)
+    supabase.from("site_settings").select("key, value")
+      .in("key", ["stats_offset_total", "stats_offset_jumlah", "stats_offset_aktif"])
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        (data ?? []).forEach((s: any) => { map[s.key] = s.value ?? "0"; });
+        setOffsets({
+          total: Number(map["stats_offset_total"] || 0),
+          jumlah: Number(map["stats_offset_jumlah"] || 0),
+          aktif: Number(map["stats_offset_aktif"] || 0),
+        });
+      });
+
     // Real-time: update campaign terkumpul & stats jumlah saat donasi diverifikasi
     const channel = supabase
       .channel("index-realtime")
