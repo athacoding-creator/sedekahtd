@@ -21,6 +21,10 @@ const AdminSettings = () => {
   const [waConfirm, setWaConfirm] = useState(DEFAULT_TEMPLATE_CONFIRM);
   const [waThankyou, setWaThankyou] = useState(DEFAULT_TEMPLATE_THANKYOU);
   const [savingWa, setSavingWa] = useState(false);
+  const [offsetTotal, setOffsetTotal] = useState(0);
+  const [offsetJumlah, setOffsetJumlah] = useState(0);
+  const [offsetAktif, setOffsetAktif] = useState(0);
+  const [savingStats, setSavingStats] = useState(false);
 
   const load = async () => {
     setLoading(true);
