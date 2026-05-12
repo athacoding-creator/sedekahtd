@@ -79,8 +79,10 @@ const AdminDonations = () => {
   const totalPending = filtered.filter(d => d.status === "pending").length;
 
   const openWa = (d: Donation) => {
+    const { panggilan, nama } = splitPanggilan(d.nama);
     const text = buildFromTemplate(waThankyou, {
-      nama: d.nama,
+      panggilan,
+      nama,
       nominal: new Intl.NumberFormat("id-ID").format(d.nominal),
       campaign: campaignName(d.campaign_id),
     });
