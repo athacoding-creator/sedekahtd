@@ -41,6 +41,9 @@ const AdminSettings = () => {
     setPixelEnabled(map["fb_pixel_enabled"] === "true");
     setWaConfirm(map["wa_template_confirm"] || DEFAULT_TEMPLATE_CONFIRM);
     setWaThankyou(map["wa_template_thankyou"] || DEFAULT_TEMPLATE_THANKYOU);
+    setOffsetTotal(Number(map["stats_offset_total"] || 0));
+    setOffsetJumlah(Number(map["stats_offset_jumlah"] || 0));
+    setOffsetAktif(Number(map["stats_offset_aktif"] || 0));
   };
 
   useEffect(() => { load(); }, []);
