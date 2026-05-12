@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
 import { CheckCircle2, Eye, Loader2, Filter, MessageCircle } from "lucide-react";
-import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU } from "@/lib/whatsapp";
+import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU, splitPanggilan } from "@/lib/whatsapp";
 
 type Donation = {
   id: string;
