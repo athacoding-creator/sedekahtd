@@ -257,7 +257,7 @@ const AdminSettings = () => {
               <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700 space-y-1">
                 <p className="font-semibold">Variabel yang tersedia:</p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {["{nama}", "{nominal}", "{campaign}"].map(v => (
+                  {["{panggilan}", "{nama}", "{nominal}", "{campaign}"].map(v => (
                     <code key={v} className="px-2 py-1 rounded bg-green-100 text-xs font-mono font-bold">{v}</code>
                   ))}
                 </div>
