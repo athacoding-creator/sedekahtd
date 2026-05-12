@@ -86,10 +86,11 @@ const CampaignDetail = () => {
             <Link
               to={`/donasi/${c.id}`}
               onClick={() => fbTrack("InitiateCheckout", { content_name: c.judul })}
-              className="w-full text-center px-6 py-4 rounded-2xl font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
-              style={c.tombol_warna ? { backgroundColor: c.tombol_warna, color: "#fff" } : undefined}
+              className={`w-full text-center px-6 py-4 rounded-2xl font-extrabold shadow-button hover:scale-[1.02] transition-smooth flex items-center justify-center gap-2 uppercase tracking-wide text-sm ${
+                c.tombol_warna ? "text-white" : "bg-accent text-accent-foreground"
+              }`}
+              style={c.tombol_warna ? { backgroundColor: c.tombol_warna } : undefined}
             >
-              {!c.tombol_warna && <span className="absolute inset-0 -z-10 rounded-2xl bg-accent" />}
               <Heart className="h-4 w-4 fill-current" /> {c.tombol_teks?.trim() || "Sedekah Sekarang"}
             </Link>
 
