@@ -45,6 +45,7 @@ const Index = () => {
   const [searchQ, setSearchQ] = useState("");
   const [kategoriList, setKategoriList] = useState<string[]>(["Semua"]);
   const [selectedKat, setSelectedKat] = useState("Semua");
+  const [offsets, setOffsets] = useState({ total: 0, jumlah: 0, aktif: 0 });
 
   useEffect(() => {
     // Load hero slides from database
