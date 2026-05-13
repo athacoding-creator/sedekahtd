@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
-import { CheckCircle2, Eye, Loader2, Filter, MessageCircle } from "lucide-react";
+import { CheckCircle2, Eye, Loader2, Filter, MessageCircle, Trash2 } from "lucide-react";
 import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU, splitPanggilan } from "@/lib/whatsapp";
 
 type Donation = {
@@ -216,6 +216,9 @@ const AdminDonations = () => {
                           <CheckCircle2 className="h-3.5 w-3.5" /> Verifikasi
                         </button>
                       )}
+                      <button onClick={() => deleteDonation(d)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-smooth" title="Hapus donasi">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
