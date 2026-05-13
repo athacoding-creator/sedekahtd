@@ -55,9 +55,26 @@ const AdminDonations = () => {
   }, []);
 
   const verify = async (id: string) => {
+    const donation = donations.find(d => d.id === id);
     const { error } = await supabase.from("donations").update({ status: "verified" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    // Auto-hapus bukti transfer dari storage agar hemat
+    if (donation?.bukti_transfer) {
+      await supabase.storage.from("bukti-transfer").remove([donation.bukti_transfer]);
+      await supabase.from("donations").update({ bukti_transfer: null }).eq("id", id);
+    }
+    toast.success("Donasi diverifikasi & bukti dihapus dari storage");
+    load();
+  };
+
+  const deleteDonation = async (d: Donation) => {
+    if (!confirm(`Hapus donasi dari "${d.nama}"?\nData & bukti akan dihapus permanen.`)) return;
+    if (d.bukti_transfer) {
+      await supabase.storage.from("bukti-transfer").remove([d.bukti_transfer]);
+    }
+    const { error } = await supabase.from("donations").delete().eq("id", d.id);
     if (error) toast.error(error.message);
-    else { toast.success("Donasi diverifikasi"); load(); }
+    else { toast.success("Donasi dihapus"); load(); }
   };
 
   const viewBukti = async (path: string) => {
