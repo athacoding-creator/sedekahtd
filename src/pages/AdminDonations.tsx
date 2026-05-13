@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
-import { CheckCircle2, Eye, Loader2, Filter, MessageCircle } from "lucide-react";
+import { CheckCircle2, Eye, Loader2, Filter, MessageCircle, Trash2 } from "lucide-react";
 import { WA_NUMBER, buildFromTemplate, DEFAULT_TEMPLATE_THANKYOU, splitPanggilan } from "@/lib/whatsapp";
 
 type Donation = {
@@ -55,9 +55,26 @@ const AdminDonations = () => {
   }, []);
 
   const verify = async (id: string) => {
+    const donation = donations.find(d => d.id === id);
     const { error } = await supabase.from("donations").update({ status: "verified" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    // Auto-hapus bukti transfer dari storage agar hemat
+    if (donation?.bukti_transfer) {
+      await supabase.storage.from("bukti-transfer").remove([donation.bukti_transfer]);
+      await supabase.from("donations").update({ bukti_transfer: null }).eq("id", id);
+    }
+    toast.success("Donasi diverifikasi & bukti dihapus dari storage");
+    load();
+  };
+
+  const deleteDonation = async (d: Donation) => {
+    if (!confirm(`Hapus donasi dari "${d.nama}"?\nData & bukti akan dihapus permanen.`)) return;
+    if (d.bukti_transfer) {
+      await supabase.storage.from("bukti-transfer").remove([d.bukti_transfer]);
+    }
+    const { error } = await supabase.from("donations").delete().eq("id", d.id);
     if (error) toast.error(error.message);
-    else { toast.success("Donasi diverifikasi"); load(); }
+    else { toast.success("Donasi dihapus"); load(); }
   };
 
   const viewBukti = async (path: string) => {
@@ -199,6 +216,9 @@ const AdminDonations = () => {
                           <CheckCircle2 className="h-3.5 w-3.5" /> Verifikasi
                         </button>
                       )}
+                      <button onClick={() => deleteDonation(d)} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-smooth" title="Hapus donasi">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
