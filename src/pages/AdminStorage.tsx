@@ -1,309 +1,270 @@
 import { AdminLayout } from "@/components/AdminLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Loader2, Eye, FileImage, AlertTriangle, RefreshCw, Search, X } from "lucide-react";
+import { Download, Loader2, FileSpreadsheet } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
+import * as XLSX from "xlsx";
 
-type BuktiItem = {
-  id: string; // donation id
+type Campaign = { id: string; judul: string };
+type Donation = {
+  id: string;
   nama: string;
   nominal: number;
-  campaign_judul: string | null;
-  bukti_transfer: string; // storage path
+  no_whatsapp: string | null;
+  metode_pembayaran: string;
   status: string;
+  pesan: string | null;
   created_at: string;
+  campaign_id: string | null;
+};
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const daysAgoStr = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
 };
 
 const AdminStorage = () => {
-  const [items, setItems] = useState<BuktiItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [viewUrl, setViewUrl] = useState<string | null>(null);
-  const [viewLoading, setViewLoading] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaignId, setCampaignId] = useState<string>("all");
+  const [status, setStatus] = useState<string>("verified");
+  const [from, setFrom] = useState<string>(daysAgoStr(30));
+  const [to, setTo] = useState<string>(todayStr());
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<Donation[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
+  useEffect(() => {
+    (supabase as any).from("campaigns").select("id, judul").order("created_at", { ascending: false })
+      .then(({ data }: any) => { if (data) setCampaigns(data); });
+  }, []);
+
+  const fetchData = async (): Promise<Donation[]> => {
+    let q = supabase
       .from("donations")
-      .select("id, nama, nominal, bukti_transfer, status, created_at, campaigns(judul)")
-      .not("bukti_transfer", "is", null)
+      .select("*")
+      .gte("created_at", `${from}T00:00:00`)
+      .lte("created_at", `${to}T23:59:59`)
       .order("created_at", { ascending: false });
+    if (campaignId !== "all") q = q.eq("campaign_id", campaignId);
+    if (status !== "all") q = q.eq("status", status);
+    const { data, error } = await q;
+    if (error) { toast.error(error.message); return []; }
+    return (data as Donation[]) ?? [];
+  };
 
-    setLoading(false);
-    if (error) { toast.error(error.message); return; }
+  const loadPreview = async () => {
+    setPreviewLoading(true);
+    const data = await fetchData();
+    setPreview(data);
+    setPreviewLoading(false);
+  };
 
-    const mapped: BuktiItem[] = (data ?? []).map((d: any) => ({
-      id: d.id,
-      nama: d.nama,
-      nominal: d.nominal,
-      campaign_judul: d.campaigns?.judul ?? null,
-      bukti_transfer: d.bukti_transfer,
-      status: d.status,
-      created_at: d.created_at,
+  useEffect(() => { loadPreview(); /* eslint-disable-next-line */ }, [campaignId, status, from, to]);
+
+  const campaignName = (id: string | null) =>
+    campaigns.find(c => c.id === id)?.judul ?? "—";
+
+  const downloadExcel = async () => {
+    setLoading(true);
+    const data = await fetchData();
+    if (data.length === 0) {
+      setLoading(false);
+      toast.error("Tidak ada data untuk diunduh");
+      return;
+    }
+
+    const rows = data.map((d, i) => ({
+      "No": i + 1,
+      "Tanggal": new Date(d.created_at).toLocaleString("id-ID", { dateStyle: "short", timeStyle: "short" }),
+      "Nama Donatur": d.nama,
+      "WhatsApp": d.no_whatsapp ?? "",
+      "Campaign": campaignName(d.campaign_id),
+      "Nominal (Rp)": d.nominal,
+      "Metode Pembayaran": d.metode_pembayaran,
+      "Status": d.status,
+      "Pesan": d.pesan ?? "",
     }));
-    setItems(mapped);
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [
+      { wch: 5 }, { wch: 18 }, { wch: 25 }, { wch: 16 },
+      { wch: 30 }, { wch: 15 }, { wch: 18 }, { wch: 12 }, { wch: 40 },
+    ];
+    const wb = XLSX.utils.book_new();
+    const sheetName = campaignId === "all"
+      ? "Semua Campaign"
+      : (campaignName(campaignId).slice(0, 28) || "Campaign");
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    const fname = `donatur_${campaignId === "all" ? "semua" : campaignName(campaignId).replace(/[^a-z0-9]+/gi, "_").toLowerCase()}_${from}_${to}.xlsx`;
+    XLSX.writeFile(wb, fname);
+    setLoading(false);
+    toast.success(`${data.length} data berhasil diunduh`);
   };
 
-  useEffect(() => { load(); }, []);
-
-  const viewBukti = async (path: string) => {
-    setViewLoading(true);
-    const { data, error } = await supabase.storage
-      .from("bukti-transfer")
-      .createSignedUrl(path, 120);
-    setViewLoading(false);
-    if (error) { toast.error("Gagal membuka bukti: " + error.message); return; }
-    setViewUrl(data.signedUrl);
-  };
-
-  const deleteBukti = async (item: BuktiItem) => {
-    if (!confirm(`Hapus bukti pembayaran dari "${item.nama}"?\nFile akan dihapus permanen dari storage.`)) return;
-
-    setDeleting(item.id);
-    try {
-      // Delete file from storage
-      const { error: storageErr } = await supabase.storage
-        .from("bukti-transfer")
-        .remove([item.bukti_transfer]);
-      if (storageErr) throw storageErr;
-
-      // Clear bukti_transfer field in donation (keep the donation record)
-      const { error: dbErr } = await supabase
-        .from("donations")
-        .update({ bukti_transfer: null })
-        .eq("id", item.id);
-      if (dbErr) throw dbErr;
-
-      toast.success("Bukti pembayaran dihapus");
-      load();
-    } catch (e: any) {
-      toast.error(e.message || "Gagal menghapus");
-    } finally {
-      setDeleting(null);
-    }
-  };
-
-  const deleteWithDonation = async (item: BuktiItem) => {
-    if (!confirm(`Hapus SELURUH data donasi dari "${item.nama}" (${formatRupiah(item.nominal)})?\nBukti dan data donasi akan dihapus permanen.`)) return;
-
-    setDeleting(item.id);
-    try {
-      // Delete file from storage
-      if (item.bukti_transfer) {
-        await supabase.storage.from("bukti-transfer").remove([item.bukti_transfer]);
-      }
-      // Delete donation record
-      const { error } = await supabase.from("donations").delete().eq("id", item.id);
-      if (error) throw error;
-
-      toast.success("Data donasi dan bukti dihapus");
-      load();
-    } catch (e: any) {
-      toast.error(e.message || "Gagal menghapus");
-    } finally {
-      setDeleting(null);
-    }
-  };
-
-  const filtered = items.filter(item => {
-    const matchSearch = !search ||
-      item.nama.toLowerCase().includes(search.toLowerCase()) ||
-      (item.campaign_judul ?? "").toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "all" || item.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString("id-ID", {
-      day: "2-digit", month: "short", year: "numeric",
-      hour: "2-digit", minute: "2-digit"
-    });
-  };
-
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-700",
-      verified: "bg-green-100 text-green-700",
-      rejected: "bg-red-100 text-red-700",
-    };
-    return map[status] ?? "bg-muted text-muted-foreground";
-  };
+  const totalNominal = useMemo(
+    () => preview.reduce((s, d) => s + (d.nominal || 0), 0),
+    [preview]
+  );
 
   return (
     <AdminLayout
-      title="Kelola Storage"
-      subtitle="Lihat dan hapus bukti pembayaran donatur"
+      title="Download Data Donatur"
+      subtitle="Export data donasi per campaign & rentang tanggal ke Excel"
       back={{ to: "/admin", label: "Kembali ke Dashboard" }}
     >
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-card rounded-xl border border-border p-4 text-center">
-          <div className="text-2xl font-extrabold font-display">{items.length}</div>
-          <div className="text-xs text-muted-foreground mt-1">Total Bukti</div>
-        </div>
-        <div className="bg-card rounded-xl border border-yellow-200 p-4 text-center">
-          <div className="text-2xl font-extrabold font-display text-yellow-600">
-            {items.filter(i => i.status === "pending").length}
+      {/* Filter Form */}
+      <div className="bg-card rounded-2xl border border-border shadow-soft p-5 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5 block">Campaign</label>
+            <select
+              value={campaignId}
+              onChange={e => setCampaignId(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
+            >
+              <option value="all">Semua Campaign</option>
+              {campaigns.map(c => <option key={c.id} value={c.id}>{c.judul}</option>)}
+            </select>
           </div>
-          <div className="text-xs text-muted-foreground mt-1">Pending</div>
-        </div>
-        <div className="bg-card rounded-xl border border-green-200 p-4 text-center">
-          <div className="text-2xl font-extrabold font-display text-green-600">
-            {items.filter(i => i.status === "verified").length}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5 block">Status</label>
+            <select
+              value={status}
+              onChange={e => setStatus(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
+            >
+              <option value="all">Semua Status</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending</option>
+            </select>
           </div>
-          <div className="text-xs text-muted-foreground mt-1">Verified</div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5 block">Dari Tanggal</label>
+            <input
+              type="date"
+              value={from}
+              onChange={e => setFrom(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5 block">Sampai Tanggal</label>
+            <input
+              type="date"
+              value={to}
+              onChange={e => setTo(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Warning */}
-      <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">
-        <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-        <span>Menghapus bukti pembayaran bersifat <strong>permanen</strong>. Pastikan data sudah tidak diperlukan sebelum menghapus.</span>
-      </div>
-
-      {/* Filter & Search */}
-      <div className="flex gap-3 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Cari nama donatur atau campaign..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
-          />
+        {/* Quick range buttons */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[
+            { label: "Hari Ini", from: todayStr(), to: todayStr() },
+            { label: "7 Hari", from: daysAgoStr(7), to: todayStr() },
+            { label: "30 Hari", from: daysAgoStr(30), to: todayStr() },
+            { label: "90 Hari", from: daysAgoStr(90), to: todayStr() },
+            { label: "Tahun Ini", from: `${new Date().getFullYear()}-01-01`, to: todayStr() },
+          ].map(r => (
+            <button
+              key={r.label}
+              onClick={() => { setFrom(r.from); setTo(r.to); }}
+              className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-xs font-semibold transition-smooth"
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary focus:outline-none text-sm"
-        >
-          <option value="all">Semua Status</option>
-          <option value="pending">Pending</option>
-          <option value="verified">Verified</option>
-          <option value="rejected">Rejected</option>
-        </select>
+
         <button
-          onClick={load}
-          className="p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-smooth"
-          title="Refresh"
+          onClick={downloadExcel}
+          disabled={loading || preview.length === 0}
+          className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-bold shadow-button hover:opacity-90 transition-smooth disabled:opacity-50"
         >
-          <RefreshCw className="h-4 w-4" />
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          Download Excel ({preview.length} data)
         </button>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-soft">
-        <div className="overflow-x-auto">
+      {/* Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Jumlah Donatur</div>
+          <div className="font-display font-extrabold text-2xl mt-1">{preview.length.toLocaleString("id-ID")}</div>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Total Nominal</div>
+          <div className="font-display font-extrabold text-2xl text-primary mt-1">{formatRupiah(totalNominal)}</div>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Periode</div>
+          <div className="font-display font-extrabold text-sm mt-1">
+            {new Date(from).toLocaleDateString("id-ID")} – {new Date(to).toLocaleDateString("id-ID")}
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Table */}
+      <div className="bg-card rounded-2xl border border-border shadow-soft">
+        <div className="px-5 py-3 border-b border-border flex items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">Preview Data</span>
+        </div>
+        <div className="overflow-x-auto rounded-b-2xl">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left">
               <tr>
-                <th className="px-4 py-3 font-bold">Donatur</th>
+                <th className="px-4 py-3 font-bold">Tanggal</th>
+                <th className="px-4 py-3 font-bold">Nama</th>
+                <th className="px-4 py-3 font-bold">WhatsApp</th>
                 <th className="px-4 py-3 font-bold">Campaign</th>
                 <th className="px-4 py-3 font-bold">Nominal</th>
-                <th className="px-4 py-3 font-bold">Tanggal</th>
-                <th className="px-4 py-3 font-bold text-center">Status</th>
-                <th className="px-4 py-3 font-bold text-center">Bukti</th>
-                <th className="px-4 py-3 font-bold text-right">Aksi</th>
+                <th className="px-4 py-3 font-bold">Status</th>
               </tr>
             </thead>
             <tbody>
-              {loading && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
+              {previewLoading && (
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                 </td></tr>
               )}
-              {!loading && filtered.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                  {items.length === 0 ? "Belum ada bukti pembayaran." : "Tidak ada hasil yang cocok."}
+              {!previewLoading && preview.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                  Tidak ada data pada filter ini.
                 </td></tr>
               )}
-              {filtered.map(item => (
-                <tr key={item.id} className="border-t border-border hover:bg-muted/30 transition-smooth">
-                  <td className="px-4 py-3 font-semibold">{item.nama}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs max-w-[140px] truncate">
-                    {item.campaign_judul ?? "—"}
+              {!previewLoading && preview.slice(0, 50).map(d => (
+                <tr key={d.id} className="border-t border-border hover:bg-muted/30 transition-smooth">
+                  <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap text-xs">
+                    {new Date(d.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
-                  <td className="px-4 py-3 font-bold text-primary whitespace-nowrap">
-                    {formatRupiah(item.nominal)}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
-                    {formatDate(item.created_at)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${statusBadge(item.status)}`}>
-                      {item.status}
+                  <td className="px-4 py-2.5 font-semibold">{d.nama}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground text-xs">{d.no_whatsapp ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground text-xs max-w-[200px] truncate">{campaignName(d.campaign_id)}</td>
+                  <td className="px-4 py-2.5 font-bold text-primary whitespace-nowrap">{formatRupiah(d.nominal)}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                      d.status === "verified" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
+                    }`}>
+                      {d.status}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => viewBukti(item.bukti_transfer)}
-                      disabled={viewLoading}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-smooth disabled:opacity-50"
-                    >
-                      {viewLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
-                      Lihat
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => deleteBukti(item)}
-                        disabled={deleting === item.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-50 text-orange-600 text-xs font-semibold hover:bg-orange-100 transition-smooth disabled:opacity-50"
-                        title="Hapus file bukti saja"
-                      >
-                        {deleting === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileImage className="h-3 w-3" />}
-                        Hapus File
-                      </button>
-                      <button
-                        onClick={() => deleteWithDonation(item)}
-                        disabled={deleting === item.id}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold hover:bg-destructive/20 transition-smooth disabled:opacity-50"
-                        title="Hapus donasi + file bukti"
-                      >
-                        {deleting === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                        Hapus Semua
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {preview.length > 50 && (
+            <div className="px-5 py-3 text-center text-xs text-muted-foreground border-t border-border">
+              Menampilkan 50 dari {preview.length} data. Download Excel untuk melihat semua.
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Modal View Bukti */}
-      {viewUrl && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setViewUrl(null)}
-        >
-          <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
-            <button
-              onClick={() => setViewUrl(null)}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-smooth"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <img
-              src={viewUrl}
-              alt="Bukti Pembayaran"
-              className="w-full rounded-2xl shadow-2xl"
-            />
-            <a
-              href={viewUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-sm font-semibold hover:bg-gray-100 transition-smooth"
-            >
-              <Eye className="h-4 w-4" /> Buka di Tab Baru
-            </a>
-          </div>
-        </div>
-      )}
     </AdminLayout>
   );
 };

@@ -220,8 +220,8 @@ const Admin = () => {
           <MenuCard
             to="/admin/storage"
             icon={<HardDrive className="h-6 w-6 text-primary" />}
-            title="Storage"
-            desc="Lihat dan hapus bukti pembayaran donatur"
+            title="Download Data Donatur"
+            desc="Export data donasi per campaign ke Excel (.xlsx)"
           />
           <MenuCard
             to="/admin/categories"
