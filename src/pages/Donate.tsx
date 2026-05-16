@@ -185,13 +185,8 @@ const Donate = () => {
           </div>
           <h1 className="font-display text-3xl font-extrabold mb-3">Terima kasih!</h1>
           <p className="text-muted-foreground mb-2">Donasi Anda telah kami terima.</p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning/10 text-warning border border-warning/20 text-sm font-semibold mb-8">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Menunggu verifikasi admin
-          </div>
+          <p className="text-muted-foreground mb-6">Admin kami akan menghubungi Anda melalui WhatsApp untuk konfirmasi lebih lanjut.</p>
           <div className="flex gap-3 justify-center">
-            <button onClick={() => nav("/campaign")} className="px-6 py-3 rounded-full bg-secondary font-semibold hover:bg-secondary/80 transition-smooth">
-              Campaign lain
-            </button>
             <button onClick={() => nav("/")} className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-button">
               Ke beranda
             </button>
@@ -545,6 +540,7 @@ const TutorialBayar = ({ isQris }: { isQris: boolean }) => {
         {
           title: "Cara Bayar via QRIS (Scan QR)",
           steps: [
+            "screenshot QRIS yang tertera di atas atau pastikan Anda sudah menyimpan gambarnya.",
             "Buka aplikasi m-banking atau e-wallet (GoPay, OVO, Dana, ShopeePay, dll.)",
             'Pilih menu \"Scan QR\" atau \"Bayar\" lalu arahkan kamera ke QR Code di atas.',
             "Masukkan nominal donasi sesuai yang tertera, lalu konfirmasi pembayaran.",
