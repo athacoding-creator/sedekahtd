@@ -192,10 +192,10 @@ const Index = () => {
             {/* Category badges */}
             <div className="absolute top-3 left-3 flex gap-1.5">
               <div className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-semibold text-slate-700 shadow-soft">
-                ⌂ Baitulmaal
+                <img src="https://res.cloudinary.com/dph1qdufr/image/upload/v1779341416/BMTD_Vertical_j5gi8u.png" alt="BMTD" className="h-full w-full object-cover" />
               </div>
               <div className="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-semibold text-slate-700 shadow-soft">
-                🕌 Masjid
+                <img src="https://res.cloudinary.com/dph1qdufr/image/upload/v1779341416/Masjid_Teras_Dakwah_-_Horizontal_jn5oyu.png" alt="Masjid" className="h-full w-full object-cover" />
               </div>
             </div>
 
