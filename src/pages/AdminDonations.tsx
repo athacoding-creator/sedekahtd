@@ -117,7 +117,7 @@ const AdminDonations = () => {
   return (
     <AdminLayout
       title="Daftar Donasi"
-      subtitle="Lihat siapa saja yang berdonasi & verifikasi pembayaran"
+      subtitle="Lihat siapa saja yang berdonasi & verifikasi pembayaran... (tapi jangan lupa Download bukti transfernya ya!)"
       back={{ to: "/admin", label: "Kembali ke Dashboard" }}
     >
       {/* Stats — sinkron real-time dengan tampilan home */}
