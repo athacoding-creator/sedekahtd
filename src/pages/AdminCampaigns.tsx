@@ -223,6 +223,8 @@ const AdminCampaigns = () => {
               <tr>
                 <th className="px-4 py-3 font-bold">Gambar</th>
                 <th className="px-4 py-3 font-bold">Judul</th>
+                <th className="px-4 py-3 font-bold">Urutan</th>
+                <th className="px-4 py-3 font-bold">Sematkan</th>
                 <th className="px-4 py-3 font-bold">Pilihan</th>
                 <th className="px-4 py-3 font-bold">Pembayaran</th>
                 <th className="px-4 py-3 font-bold">Target</th>
@@ -233,7 +235,7 @@ const AdminCampaigns = () => {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                 </td></tr>
               )}
