@@ -51,7 +51,7 @@ const AdminCampaigns = () => {
   const load = async () => {
     setLoading(true);
     const [campRes, pmRes, cpmRes, catRes] = await Promise.all([
-      (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("campaigns").select("*").order("is_pinned", { ascending: false }).order("urutan", { ascending: true }).order("created_at", { ascending: false }),
       (supabase as any).from("payment_methods").select("id, nama, tipe, gambar_url, aktif").order("urutan").order("created_at"),
       (supabase as any).from("campaign_payment_methods").select("campaign_id, payment_method_id"),
       (supabase as any).from("categories").select("nama").eq("aktif", true).order("urutan"),
