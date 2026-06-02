@@ -259,6 +259,41 @@ const AdminCampaigns = () => {
                     </td>
                     <td className="px-4 py-3 font-semibold max-w-xs truncate">{c.judul}</td>
                     <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          value={c.urutan ?? 0}
+                          onChange={e => {
+                            const v = Number(e.target.value);
+                            setItems(prev => prev.map(x => x.id === c.id ? { ...x, urutan: v } : x));
+                          }}
+                          onBlur={async e => {
+                            const v = Number(e.target.value);
+                            const { error } = await (supabase as any).from("campaigns").update({ urutan: v }).eq("id", c.id);
+                            if (error) toast.error(error.message);
+                            else { toast.success("Urutan disimpan"); load(); }
+                          }}
+                          className="w-16 px-2 py-1 rounded border border-border bg-background text-sm text-center"
+                          title="Angka kecil tampil duluan"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={async () => {
+                          const { error } = await (supabase as any).from("campaigns").update({ is_pinned: !c.is_pinned }).eq("id", c.id);
+                          if (error) toast.error(error.message);
+                          else { load(); toast.success(c.is_pinned ? "Lepas sematan" : "Disematkan ke atas"); }
+                        }}
+                        title={c.is_pinned ? "Lepas sematan" : "Sematkan ke paling atas"}
+                        className={`p-1.5 rounded-lg transition-smooth ${
+                          c.is_pinned ? "text-rose-500 bg-rose-50 hover:bg-rose-100" : "text-slate-300 hover:text-rose-400 hover:bg-rose-50"
+                        }`}
+                      >
+                        <Pin className={`h-4 w-4 ${c.is_pinned ? "fill-rose-400" : ""}`} />
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
                       <button
                         onClick={async () => {
                           const { error } = await (supabase as any).from("campaigns").update({ is_pilihan: !c.is_pilihan }).eq("id", c.id);
