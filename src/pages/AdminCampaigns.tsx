@@ -17,6 +17,8 @@ type Campaign = {
   qris_id: string | null;
   fb_pixel_id: string | null;
   is_pilihan: boolean;
+  is_pinned: boolean;
+  urutan: number;
   jenis_campaign: string;
   nama_paket: string | null;
   harga_paket: number | null;
