@@ -240,7 +240,7 @@ const AdminCampaigns = () => {
                 </td></tr>
               )}
               {!loading && items.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
               )}
               {items.map(c => {
                 const pmIds = campaignPayments[c.id] ?? [];
