@@ -70,6 +70,8 @@ const Index = () => {
 
     // Load campaigns with real-time subscription
     (supabase as any).from("campaigns").select("*")
+      .order("is_pinned", { ascending: false })
+      .order("urutan", { ascending: true })
       .order("is_pilihan", { ascending: false })
       .order("jumlah_donatur", { ascending: false })
       .order("created_at", { ascending: false })

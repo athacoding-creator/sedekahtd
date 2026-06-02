@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatRupiah } from "@/lib/format";
-import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp, BarChart3, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X, Image as ImageIcon, QrCode, TrendingUp, BarChart3, Star, Pin, ArrowUp, ArrowDown } from "lucide-react";
 
 type Campaign = {
   id: string;
@@ -17,6 +17,8 @@ type Campaign = {
   qris_id: string | null;
   fb_pixel_id: string | null;
   is_pilihan: boolean;
+  is_pinned: boolean;
+  urutan: number;
   jenis_campaign: string;
   nama_paket: string | null;
   harga_paket: number | null;
@@ -49,7 +51,7 @@ const AdminCampaigns = () => {
   const load = async () => {
     setLoading(true);
     const [campRes, pmRes, cpmRes, catRes] = await Promise.all([
-      (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("campaigns").select("*").order("is_pinned", { ascending: false }).order("urutan", { ascending: true }).order("created_at", { ascending: false }),
       (supabase as any).from("payment_methods").select("id, nama, tipe, gambar_url, aktif").order("urutan").order("created_at"),
       (supabase as any).from("campaign_payment_methods").select("campaign_id, payment_method_id"),
       (supabase as any).from("categories").select("nama").eq("aktif", true).order("urutan"),
@@ -221,6 +223,8 @@ const AdminCampaigns = () => {
               <tr>
                 <th className="px-4 py-3 font-bold">Gambar</th>
                 <th className="px-4 py-3 font-bold">Judul</th>
+                <th className="px-4 py-3 font-bold">Urutan</th>
+                <th className="px-4 py-3 font-bold">Sematkan</th>
                 <th className="px-4 py-3 font-bold">Pilihan</th>
                 <th className="px-4 py-3 font-bold">Pembayaran</th>
                 <th className="px-4 py-3 font-bold">Target</th>
@@ -231,12 +235,12 @@ const AdminCampaigns = () => {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin mx-auto" />
                 </td></tr>
               )}
               {!loading && items.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">Belum ada campaign.</td></tr>
               )}
               {items.map(c => {
                 const pmIds = campaignPayments[c.id] ?? [];
@@ -254,6 +258,41 @@ const AdminCampaigns = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 font-semibold max-w-xs truncate">{c.judul}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          value={c.urutan ?? 0}
+                          onChange={e => {
+                            const v = Number(e.target.value);
+                            setItems(prev => prev.map(x => x.id === c.id ? { ...x, urutan: v } : x));
+                          }}
+                          onBlur={async e => {
+                            const v = Number(e.target.value);
+                            const { error } = await (supabase as any).from("campaigns").update({ urutan: v }).eq("id", c.id);
+                            if (error) toast.error(error.message);
+                            else { toast.success("Urutan disimpan"); load(); }
+                          }}
+                          className="w-16 px-2 py-1 rounded border border-border bg-background text-sm text-center"
+                          title="Angka kecil tampil duluan"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={async () => {
+                          const { error } = await (supabase as any).from("campaigns").update({ is_pinned: !c.is_pinned }).eq("id", c.id);
+                          if (error) toast.error(error.message);
+                          else { load(); toast.success(c.is_pinned ? "Lepas sematan" : "Disematkan ke atas"); }
+                        }}
+                        title={c.is_pinned ? "Lepas sematan" : "Sematkan ke paling atas"}
+                        className={`p-1.5 rounded-lg transition-smooth ${
+                          c.is_pinned ? "text-rose-500 bg-rose-50 hover:bg-rose-100" : "text-slate-300 hover:text-rose-400 hover:bg-rose-50"
+                        }`}
+                      >
+                        <Pin className={`h-4 w-4 ${c.is_pinned ? "fill-rose-400" : ""}`} />
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={async () => {

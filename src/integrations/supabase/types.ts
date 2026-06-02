@@ -108,6 +108,7 @@ export type Database = {
           harga_paket: number | null
           id: string
           is_pilihan: boolean
+          is_pinned: boolean
           jenis_campaign: string
           judul: string
           jumlah_donatur: number
@@ -119,6 +120,7 @@ export type Database = {
           tombol_teks: string | null
           tombol_warna: string | null
           updated_at: string
+          urutan: number
         }
         Insert: {
           created_at?: string
@@ -128,6 +130,7 @@ export type Database = {
           harga_paket?: number | null
           id?: string
           is_pilihan?: boolean
+          is_pinned?: boolean
           jenis_campaign?: string
           judul: string
           jumlah_donatur?: number
@@ -139,6 +142,7 @@ export type Database = {
           tombol_teks?: string | null
           tombol_warna?: string | null
           updated_at?: string
+          urutan?: number
         }
         Update: {
           created_at?: string
@@ -148,6 +152,7 @@ export type Database = {
           harga_paket?: number | null
           id?: string
           is_pilihan?: boolean
+          is_pinned?: boolean
           jenis_campaign?: string
           judul?: string
           jumlah_donatur?: number
@@ -159,6 +164,7 @@ export type Database = {
           tombol_teks?: string | null
           tombol_warna?: string | null
           updated_at?: string
+          urutan?: number
         }
         Relationships: []
       }
